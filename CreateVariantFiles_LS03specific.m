@@ -12,16 +12,18 @@ clear all
 workbenchdir = '/Applications/workbench/bin_macosx64/';
 leftsurf = '/Users/dianaperez/Box/Dependencies/32k_ConteAtlas_v2_distribute/Conte69.L.midthickness.32k_fs_LR.surf.gii';
 rightsurf = '/Users/dianaperez/Box/Dependencies/32k_ConteAtlas_v2_distribute/Conte69.R.midthickness.32k_fs_LR.surf.gii';
-dirpath = '/Users/dianaperez/Desktop/';
-rest_file = '/Users/dianaperez/Desktop/sptlCorrLS03_vs_120_allcorr_cortex_corr.dtseries.nii';
-%SNRpath = '/Users/dianaperez/Desktop/LS03SNRmask.4dfp.img';
+dirpath = '/Volumes/GRATTONLAB/Lifespan/BIDS/Nifti/derivatives/postFCproc_CIFTI/dconn_cifti_normalwall/';
+%dirpath = '/Users/dianaperez/Desktop/';
+rest_file = [dirpath 'sub-LS05_vs_120_allsubs_sptlCorr_cortex_smooth_2.55.dtseries.nii'];
+SNRpath = '/Users/dianaperez/Box/HCP_variants/bottomBrainMask.dtseries.nii';
 outfilepath = '/Users/dianaperez/Desktop/';
-subject = 'LS03';
+subject = 'LS05';
 
 %%
-threshold = [5, 10];  %% Thresholds used to calculate variants (lowest % or correlation values)
+threshold = [5];  %% Thresholds used to calculate variants (lowest % or correlation values)
 SNRexclusion = 0;  %% Toggles whether to exclude variants based on SNR, 1 = exclude, 0 = don't exclude
 ExcludeBySize = 1;
+SNRmap = ft_read_cifti_mod(SNRpath);
 
 %%
 %     % reads file paths, sub numbers split-halves from txt files    
@@ -38,11 +40,11 @@ for x = 1:numel(threshold)
         %%
         % if you want to exclude low signal regions, this will exclude by SNR
         if SNRexclusion == 1
-            SNRmap = ft_read_cifti_mod([SNRpath '/' subject '_SNRMap_REST_MSCTemplate_AllSessions.4dfp.img_LR_surf_subcort_333_32k_fsLR.dscalar.nii']);
+            SNRmap = ft_read_cifti_mod(SNRpath);
             
-            SNRmap.data = SNRmap.data(1:59412,:);
-            SNRexclude = find(SNRmap.data < 750);
-
+%             SNRmap.data = SNRmap.data(1:59412,:);
+%             SNRexclude = find(SNRmap.data < 750);
+            
             cifti_rest.data(SNRexclude,1) = NaN;
             cifti_task.data(SNRexclude,1) = NaN;
         end
@@ -84,11 +86,11 @@ for x = 1:numel(threshold)
         %This creates the output file names for rest and task 
         %outfilerest = strrep(rest_file{x}, 'vs_120_allsubs_corr_cortex_corr', ['ThresholdedVariantMap_SNRExclude_' num2str(threshold(x))]);
         %outfiletask = strrep(task_files{x}, 'cortex_vs_120_allsubs_corr_cortex_corr', ['ThresholdedVariantMap_SNRExclude_' num2str(threshold)]);
-        outfilerest = ['LS03_variants_sizeExcluded_' num2str(threshold(x)) '.dtseries.nii'];
+        outfilerest = [outfilepath '/' subject '_uniqueIDs_variants_sizeExcluded_thresh-' num2str(threshold(x)) '_smooth_2.55.dtseries.nii'];
         %strrest = ['SNRExclude_' restsplithalf{x}];
         %strtask = ['SNRExclude_' tasksplithalf{x}];
         %outfilewbtask = [outfilepath '/' subject '_matcheddata_Variant_Size_' strtask '_' num2str(threshold) '.dtseries.nii'];
-        outfilewbrest = [outfilepath '/' subject '_matcheddata_REST_Variant_Size_' num2str(threshold(x)) '.dtseries.nii'];
+        outfilewbrest = [outfilepath '/' subject '_uniqueIDs_matcheddata_REST_Variant_Size_thresh-' num2str(threshold(x)) '_smooth_2.55.dtseries.nii'];
 
         %this creates and writes the file in cifti format
         cifti_rest.data = cifti_rest_final_dat;
@@ -110,8 +112,7 @@ for x = 1:numel(threshold)
         if ExcludeBySize == 1             
             % exclusion criteria is set to 15 vertices (any variant less
             % than 15 vertices big will be excluded
-            [cifti_rest.data] = ExcludeVariantSize(cifti_rest.data, subject, threshold(x), 50);
-            
+            [cifti_rest.data] = ExcludeVariantbySize(cifti_rest.data, subject, threshold(x), 50);
         end 
         
         % writes size-excluded variant masks
@@ -119,3 +120,38 @@ for x = 1:numel(threshold)
         %ft_write_cifti_mod(outfiletask, cifti_task)
     end
 
+function [cifti_rest_data cifti_task_data] = ExcludeVariantbySize(cifti_rest_data, subject, threshold, exclusion_criteria)
+
+        rest_sizes = [];
+        
+        % same values as in cifti_rest.data but w/o repetitions, of
+        % vertices?
+        vars_rest = unique(cifti_rest_data);
+        
+        
+        %counts vertices to determine if variant meet exclusion criteria
+        for q = 1:length(vars_rest)
+            vertcount = 0;
+            for r = 1:length(cifti_rest_data)
+                if cifti_rest_data(r) == vars_rest(q)
+                    vertcount = vertcount + 1;
+                end
+            end
+            rest_sizes = [rest_sizes; vars_rest(q) vertcount];
+        end
+
+        
+        %removing vertices belonging to variants that are not at least 15
+        %vertices big
+        for i = 2:size(rest_sizes,1)            
+            if rest_sizes(i,2) < exclusion_criteria                
+                removeverts = find(cifti_rest_data == rest_sizes(i,1));                
+                cifti_rest_data(removeverts,1) = 0;                
+%             else                
+%                 setverts = find(cifti_rest_data == rest_sizes(i,1));                
+%                 cifti_rest_data(setverts,1) = 1;                
+            end
+        end
+        
+
+ end
