@@ -3,8 +3,8 @@
 clear all
 %272 frames = 4.99 min, 
 %dataDir = '/projects/b1081/Lifespan/derivatives/preproc_FCProc/corrmats_Seitzman300/';
-dataDir = '/Volumes/GRATTONLAB/Lifespan/BIDS/Nifti/derivatives/preproc_FCProc/corrmats_Seitzman300/';
-subject = {'LS03', 'LS05'};
+dataDir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Post-COVID/BIDS/derivatives/preproc_FCProc/corrmats_Seitzman300/';
+subject = {'LS02', 'LS03', 'LS05', 'LS08', 'LS11', 'LS14'};
 sessions = 5;
 %runs = [9,9,11,8,9;8,8,8,9,9];
 %pts2sample = 8181; %8181 roughly equivalent to 150 minutes
@@ -19,7 +19,7 @@ for s = 1:numel(subject)
     for i = 1:sessions
         
         %load mat file
-        load([dataDir 'sub-' subject{s} '_sess-' num2str(i) '_task-rest_corrmat_Seitzman300.mat'])
+        load([dataDir '/sub-' subject{s} '/sub-' subject{s} '_sess-' num2str(i) '_task-rest_corrmat_Seitzman300.mat'])
         %apply tmask
         masked_data = sess_roi_timeseries_concat(:,logical(tmask_concat'));
 
@@ -89,21 +89,31 @@ for s = 1:numel(subject)
     
 end
 
+corrs_for_mean = [corr(1:3,1:20; corr(5:6,1:20)];
+mean = mean(corrs_for_mean);
 %plot reliability curves
 times =[5:5:100];
 figure;
-plot(times,corr(1,:),'Color',[1, 0.5, 0],'LineWidth', 3)
-ylim([0 1]);
+plot(times(1:20),corr(1,1:20),'Color',[1, 0, 0],'LineWidth', 3) %LS02
 hold on
-plot(times(1:18),corr(2,1:18),'Color',[0, 0, 1],'LineWidth', 3)
+plot(times(1:20),corr(2,1:20),'Color',[0, 1, 0],'LineWidth', 3) %LS03
 hold on
+plot(times(1:20),corr(3,1:20),'Color',[0, 0, 1],'LineWidth', 3)%LS05
+hold on
+plot(times(1:3),corr(4,1:3),'Color',[0, 1, 1],'LineWidth', 3)%LS08
+hold on
+plot(times(1:20),corr(5,1:20),'Color',[1, 0, 1],'LineWidth', 3)%LS11
+hold on
+plot(times(1:20),corr(6,1:20),'Color',[0, 0, 0],'LineWidth', 3)%LS14
+hold on
+plot(times(1:20),mean, ':', 'Color', [0.4940 0.1840 0.5560], 'LineWidth',3) %average
 
 ylabel('Pearson Correlation (r)');
 xlabel('Time (Minutes)');
 
 m = findobj(gca,'Type','line');
 
-hleg1 = legend(m(1:2), 'LS05', 'LS03', 'Location', 'SouthEast');
+hleg1 = legend(m(1:7), 'Average', 'LS14', 'LS11', 'LS08', 'LS05', 'LS03', 'LS02', 'Location', 'SouthEast');
 hleg1.FontSize = 14;
 ax = gca;
 ax.FontSize = 17;

@@ -1,78 +1,58 @@
-% Look at relationship between correlation matrices across sessions and
-% subjects
+% LS02_1 = load([datadir 'sub-LS02/sub-LS02_sess-1_task-rest_corrmat_Seitzman300.mat']);
+% LS02_2 = load([datadir 'sub-LS02/sub-LS02_sess-2_task-rest_corrmat_Seitzman300.mat']);
+% LS02_3 = load([datadir 'sub-LS02/sub-LS02_sess-3_task-rest_corrmat_Seitzman300.mat']);
+% LS03_1 = load([datadir 'sub-LS03/sub-LS03_sess-1_task-rest_corrmat_Seitzman300.mat']);
+% LS03_2 = load([datadir 'sub-LS03/sub-LS03_sess-2_task-rest_corrmat_Seitzman300.mat']);
+% LS03_3 = load([datadir 'sub-LS03/sub-LS03_sess-3_task-rest_corrmat_Seitzman300.mat']);
+% LS03_4 = load([datadir 'sub-LS03/sub-LS03_sess-4_task-rest_corrmat_Seitzman300.mat']);
+% LS03_5 = load([datadir 'sub-LS03/sub-LS03_sess-5_task-rest_corrmat_Seitzman300.mat']);
+% LS04_1 = load([datadir 'sub-LS04/sub-LS04_sess-1_task-rest_corrmat_Seitzman300.mat']);
+% LS05_1 = load([datadir 'sub-LS05/sub-LS05_sess-1_task-rest_corrmat_Seitzman300.mat']);
+% LS05_2 = load([datadir 'sub-LS05/sub-LS05_sess-2_task-rest_corrmat_Seitzman300.mat']);
+% LS05_3 = load([datadir 'sub-LS05/sub-LS05_sess-3_task-rest_corrmat_Seitzman300.mat']);
+% LS05_4 = load([datadir 'sub-LS05/sub-LS05_sess-4_task-rest_corrmat_Seitzman300.mat']);
+% LS05_5 = load([datadir 'sub-LS05/sub-LS05_sess-5_task-rest_corrmat_Seitzman300.mat']);
+% LS07_1 = load([datadir 'sub-LS07/sub-LS07_sess-1_task-rest_corrmat_Seitzman300.mat']);
+% LS07_2 = load([datadir 'sub-LS07/sub-LS07_sess-2_task-rest_corrmat_Seitzman300.mat']);
+% LS10_1 = load([datadir 'sub-LS10/sub-LS10_sess-1_task-rest_corrmat_Seitzman300.mat']);
 
-%datadir = '/projects/b1081/Lifespan/derivatives/preproc_FCProc/corrmats_Seitzman300/';
-% outDir = '/home/dcr8536/';
-% atlas_dir = '/projects/b1081/Atlases/';
-% addpath(genpath('/home/dcr8536/Repositories/GrattonLab-General-Repo/FCPROCESS'));
-% addpath(genpath('/projects/b1081/Scripts'))
-% addpath(genpath('/projects/b1081/Darmouth_MIND2'))
-datadir = '/Volumes/GRATTONLAB/Lifespan/BIDS/Nifti/derivatives/preproc_FCProc/corrmats_Seitzman300/';
-outDir = '/Users/dianaperez/Desktop/Research/Lifespan/';
-atlas_dir = '/Users/dianaperez/Box/Quest_Backup/Atlases/';
-addpath(genpath('/Users/dianaperez/Documents/GitHub/GrattonLab-General-Repo/FCPROCESS'));
-addpath(genpath('/Users/dianaperez/Box/Scripts'))
-addpath(genpath('/Users/dianaperez/Box/Dependencies/cifti-matlab-master'))
-addpath(genpath('/Users/dianaperez/Box/Quest_Backup/Darmouth_MIND2'))
-subs = {'LS02', 'LS03', 'LS04', 'LS05', 'LS07', 'LS10'};
-atlas_params = atlas_parameters_GrattonLab('Seitzman300',atlas_dir);
-
-
-LS02_1 = load([datadir 'sub-LS02/sub-LS02_sess-1_task-rest_corrmat_Seitzman300.mat']);
-LS02_2 = load([datadir 'sub-LS02/sub-LS02_sess-2_task-rest_corrmat_Seitzman300.mat']);
-LS02_3 = load([datadir 'sub-LS02/sub-LS02_sess-3_task-rest_corrmat_Seitzman300.mat']);
-LS03_1 = load([datadir 'sub-LS03/sub-LS03_sess-1_task-rest_corrmat_Seitzman300.mat']);
-LS03_2 = load([datadir 'sub-LS03/sub-LS03_sess-2_task-rest_corrmat_Seitzman300.mat']);
-LS03_3 = load([datadir 'sub-LS03/sub-LS03_sess-3_task-rest_corrmat_Seitzman300.mat']);
-LS03_4 = load([datadir 'sub-LS03/sub-LS03_sess-4_task-rest_corrmat_Seitzman300.mat']);
-LS03_5 = load([datadir 'sub-LS03/sub-LS03_sess-5_task-rest_corrmat_Seitzman300.mat']);
-LS04_1 = load([datadir 'sub-LS04/sub-LS04_sess-1_task-rest_corrmat_Seitzman300.mat']);
-LS05_1 = load([datadir 'sub-LS05/sub-LS05_sess-1_task-rest_corrmat_Seitzman300.mat']);
-LS05_2 = load([datadir 'sub-LS05/sub-LS05_sess-2_task-rest_corrmat_Seitzman300.mat']);
-LS05_3 = load([datadir 'sub-LS05/sub-LS05_sess-3_task-rest_corrmat_Seitzman300.mat']);
-LS05_4 = load([datadir 'sub-LS05/sub-LS05_sess-4_task-rest_corrmat_Seitzman300.mat']);
-LS05_5 = load([datadir 'sub-LS05/sub-LS05_sess-5_task-rest_corrmat_Seitzman300.mat']);
-LS07_1 = load([datadir 'sub-LS07/sub-LS07_sess-1_task-rest_corrmat_Seitzman300.mat']);
-LS07_2 = load([datadir 'sub-LS07/sub-LS07_sess-2_task-rest_corrmat_Seitzman300.mat']);
-LS10_1 = load([datadir 'sub-LS10/sub-LS10_sess-1_task-rest_corrmat_Seitzman300.mat']);
-
-corrmat_2(1,:,:,:) = LS02_1.corrmat;
-corrmat_2(2,:,:,:) = LS02_2.corrmat;
-corrmat_2(3,:,:,:) = LS02_3.corrmat;
-
-mean_LS02 = squeeze(mean(corrmat_2,1));
-
-corrmat_3(1,:,:,:) = LS03_1.corrmat;
-corrmat_3(2,:,:,:) = LS03_2.corrmat;
-corrmat_3(3,:,:,:) = LS03_3.corrmat;
-corrmat_3(4,:,:,:) = LS03_4.corrmat;
-corrmat_3(5,:,:,:) = LS03_5.corrmat;
-
-mean_LS03 = squeeze(mean(corrmat_3,1));
-
-mean_LS04 = LS04_1.corrmat;
-
-corrmat_5(1,:,:,:) = LS05_1.corrmat;
-corrmat_5(2,:,:,:) = LS05_2.corrmat;
-corrmat_5(3,:,:,:) = LS05_3.corrmat;
-corrmat_5(4,:,:,:) = LS05_4.corrmat;
-corrmat_5(5,:,:,:) = LS05_5.corrmat;
-
-mean_LS05 = squeeze(mean(corrmat_5,1));
-
-corrmat_7(1,:,:,:) = LS07_1.corrmat;
-corrmat_7(2,:,:,:) = LS07_2.corrmat;
-
-mean_LS07 = squeeze(mean(corrmat_7,1));
-
-mean_LS10 = LS10_1.corrmat;
-
-group_corrmat(1,:,:,:) = mean_LS02;
-group_corrmat(2,:,:,:) = mean_LS03;
-group_corrmat(3,:,:,:) = mean_LS04;
-group_corrmat(4,:,:,:) = mean_LS05;
-group_corrmat(5,:,:,:) = mean_LS07;
-group_corrmat(6,:,:,:) = mean_LS10;
+% corrmat_2(1,:,:,:) = LS02_1.corrmat;
+% corrmat_2(2,:,:,:) = LS02_2.corrmat;
+% corrmat_2(3,:,:,:) = LS02_3.corrmat;
+% 
+% mean_LS02 = squeeze(mean(corrmat_2,1));
+% 
+% corrmat_3(1,:,:,:) = LS03_1.corrmat;
+% corrmat_3(2,:,:,:) = LS03_2.corrmat;
+% corrmat_3(3,:,:,:) = LS03_3.corrmat;
+% corrmat_3(4,:,:,:) = LS03_4.corrmat;
+% corrmat_3(5,:,:,:) = LS03_5.corrmat;
+% 
+% mean_LS03 = squeeze(mean(corrmat_3,1));
+% 
+% mean_LS04 = LS04_1.corrmat;
+% 
+% corrmat_5(1,:,:,:) = LS05_1.corrmat;
+% corrmat_5(2,:,:,:) = LS05_2.corrmat;
+% corrmat_5(3,:,:,:) = LS05_3.corrmat;
+% corrmat_5(4,:,:,:) = LS05_4.corrmat;
+% corrmat_5(5,:,:,:) = LS05_5.corrmat;
+% 
+% mean_LS05 = squeeze(mean(corrmat_5,1));
+% 
+% corrmat_7(1,:,:,:) = LS07_1.corrmat;
+% corrmat_7(2,:,:,:) = LS07_2.corrmat;
+% 
+% mean_LS07 = squeeze(mean(corrmat_7,1));
+% 
+% mean_LS10 = LS10_1.corrmat;
+% 
+% group_corrmat(1,:,:,:) = mean_LS02;
+% group_corrmat(2,:,:,:) = mean_LS03;
+% group_corrmat(3,:,:,:) = mean_LS04;
+% group_corrmat(4,:,:,:) = mean_LS05;
+% group_corrmat(5,:,:,:) = mean_LS07;
+% group_corrmat(6,:,:,:) = mean_LS10;
 
 % for s = 1:4 %different subjects, avg over sessions
 %     figure_corrmat_GrattonLab(squeeze(group_corrmat(s,:,:,:)),atlas_params,-0.4,1);
@@ -82,11 +62,8 @@ group_corrmat(6,:,:,:) = mean_LS10;
 % end
 % close('all');
 
-% Make similarity matrices
-maskmat = ones(atlas_params.num_rois);
-maskmat = logical(triu(maskmat,1));
-%not averaged across sessions
-tmp = corrmat_2(1,:,:,:);
+
+
 % corrlin(1,:) = single(FisherTransform(tmp(maskmat)));
 % tmp = corrmat_2(2,:,:,:);
 % corrlin(2,:) = single(FisherTransform(tmp(maskmat)));
@@ -120,6 +97,9 @@ tmp = corrmat_2(1,:,:,:);
 % corrlin(15,:) = single(FisherTransform(tmp(maskmat)));
 % tmp = mean_LS10;
 % corrlin(17,:) = tmp(maskmat);
+
+
+tmp = corrmat_2(1,:,:,:);
 corrlin(1,:) = single(FisherTransform(tmp(maskmat)));
 tmp = corrmat_2(2,:,:,:);
 corrlin(2,:) = single(FisherTransform(tmp(maskmat)));
@@ -152,42 +132,9 @@ corrlin(14,:) = tmp(maskmat);
 tmp = corrmat_7(2,:,:,:);
 corrlin(15,:) = tmp(maskmat);
 
-z_corrlin = single(FisherTransform(corrlin));
-simmat = corr(z_corrlin');
-figure('Position',[1 1 1000 800]);
-imagesc(simmat,[0 1]); colormap('jet');
-hline_new([3,8,13,15]+0.5,'k',2);
-vline_new([3,8,13,15]+0.5,'k',2);
-set(gca,'XTick',[2,6,11,14.5], 'YTick', [2,6,11,14.5], 'XTickLabel',...
-    {'LS02', 'LS03', 'LS05', 'LS07'}, 'YTickLabel', {'LS02', 'LS03', 'LS05', 'LS07'});
-axis square;
-colorbar;
-title('Correlation Matrix Similarity');
-saveas(gcf,[outDir 'SimilarityMat_rest.tiff'],'tiff');
-close('all');
 
-%averaged across sessions
-maskmat = ones(atlas_params.num_rois);
-maskmat = logical(triu(maskmat,1));
-count = 1;
-for s = 1:6
-        tmp = mean_corrmat(s,:,:,:);
-        corrlin(count,:) = tmp(maskmat);
-        count = count+1;
-end
-% end
-simmat = corr(corrlin');
-figure('Position',[1 1 1000 800]);
-imagesc(simmat,[0 1]); colormap('jet');
-hline_new([3,8,9,14,16]+0.5,'k',2);
-vline_new([3,8,9,14,16]+0.5,'k',2);
-set(gca,'XTick',[2,6,9,12,15.5,17], 'YTick', [2,6,9,12,15.5,17], 'XTickLabel',...
-    {'LS02', 'LS03', 'LS04', 'LS05', 'LS07', 'LS10'}, 'YTickLabel', {'LS02', 'LS03', 'LS04', 'LS05', 'LS07', 'LS10'});
-axis square;
-colorbar;
-title('Correlation Matrix Similarity');
-saveas(gcf,[outDir 'SimilarityMat_averaged.tiff'],'tiff');
-close('all');
+%z_corrlin = single(FisherTransform(corrlin));
+
 
 % Talk about doing these measures with individual ROIs
 

@@ -1,9 +1,7 @@
 %% CreateVariantFiles.m
 %This script makes the variants from spatial correlation maps, excluding
 %regions with low signal. 
-%Written by Brian Kraus. Edited by Diana Perez.
-%% I NEED TO FIGURE OUT A WAY TO MAKE ALL THE CIFTI_RELATED SCRIPTS BE IN MY PATH AND WORK!!! 
-%will probably have to download the folder from Zach's directory :/
+%Written by Brian Kraus. Edited by Diana
 
 clear all
 
@@ -12,16 +10,15 @@ clear all
 workbenchdir = '/Applications/workbench/bin_macosx64/';
 leftsurf = '/Users/dianaperez/Box/Dependencies/32k_ConteAtlas_v2_distribute/Conte69.L.midthickness.32k_fs_LR.surf.gii';
 rightsurf = '/Users/dianaperez/Box/Dependencies/32k_ConteAtlas_v2_distribute/Conte69.R.midthickness.32k_fs_LR.surf.gii';
-dirpath = '/Volumes/GRATTONLAB/Lifespan/BIDS/Nifti/derivatives/postFCproc_CIFTI/dconn_cifti_normalwall/';
-%dirpath = '/Users/dianaperez/Desktop/';
-rest_file = [dirpath 'sub-LS05_vs_120_allsubs_sptlCorr_cortex_smooth_2.55.dtseries.nii'];
+data_dir = '/Users/dianaperez/Desktop/'; %directory where the data is located
+rest_file = [data_dir 'sub-LS05_spCorrMap.dtseries.nii']; % name of the spatial correlation map file
 SNRpath = '/Users/dianaperez/Box/HCP_variants/bottomBrainMask.dtseries.nii';
 outfilepath = '/Users/dianaperez/Desktop/';
 subject = 'LS05';
 
 %%
 threshold = [5];  %% Thresholds used to calculate variants (lowest % or correlation values)
-SNRexclusion = 0;  %% Toggles whether to exclude variants based on SNR, 1 = exclude, 0 = don't exclude
+SNRexclusion = 1;  %% Toggles whether to exclude variants based on SNR, 1 = exclude, 0 = don't exclude
 ExcludeBySize = 1;
 SNRmap = ft_read_cifti_mod(SNRpath);
 
@@ -45,8 +42,8 @@ for x = 1:numel(threshold)
 %             SNRmap.data = SNRmap.data(1:59412,:);
 %             SNRexclude = find(SNRmap.data < 750);
             
-            cifti_rest.data(SNRexclude,1) = NaN;
-            cifti_task.data(SNRexclude,1) = NaN;
+            cifti_rest.data(SNRmap.data==1) = NaN;
+            %cifti_task.data(SNRexclude,1) = NaN;
         end
         
         %% Makes variant maps

@@ -21,8 +21,8 @@ clear all
 % ------------------------------------------------------------------------
 % PATHS
 % ------------------------------------------------------------------------
-dataLoc = '/Volumes/GRATTONLAB/Lifespan/BIDS/Nifti/derivatives/preproc_FCProc/corrmats_Seitzman300/';
-atlas_dir = '/Users/diana/Desktop/Research/Atlases/';
+dataLoc = '/Volumes/Research_HD/corrmats_Seitzman300/'%'/Volumes/GRATTONLAB/Lifespan/BIDS/Nifti/derivatives/preproc_FCProc/corrmats_Seitzman300/';
+atlas_dir = '/Users/dianaperez/Box/Dependencies/';
 atlas = 'Seitzman300';
 % load atlas that contains roi info (including which rois belong to each network) 
 atlas_params = atlas_parameters_GrattonLab(atlas,atlas_dir);
@@ -30,9 +30,15 @@ atlas_params = atlas_parameters_GrattonLab(atlas,atlas_dir);
 % ------------------------------------------------------------------------
 % VARIABLES
 % ------------------------------------------------------------------------
-
-subs = {'LS02', 'LS03', 'LS04', 'LS05', 'LS07', 'LS10'};
-sessions = [3, 5, 1, 5, 2, 1];
+iNetworks = 1;
+Lifespan = 0;
+if Lifespan
+    subs = {'LS02', 'LS03', 'LS04', 'LS05', 'LS07', 'LS10'};
+    sessions = [3, 5, 1, 5, 2, 1];
+elseif iNetworks
+    subs = {'INET003', 'INET005', 'INET006', 'INET010', 'INET016'};
+    sessions = [4,4,4,4,4];
+end
 network_z.within = [];
 network_z.between = [];
 network_z.networks = atlas_params.networks; %copy names of each network
@@ -48,7 +54,7 @@ for sub = 1:numel(subs)
         % STEP 1: Load Correlation Matrix
         % ------------------------------------------------------------------------
         %loads entire structure saved by FCProc script
-        fname = sprintf('%s/sub-%s/sub-%s_sess-%d_task-rest_corrmat_Seitzman300.mat', dataLoc, subs{sub}, subs{sub}, ses);
+        fname = sprintf('%s/sub-%s/sess-%d/sub-%s_sess-%d_task-rest_corrmat_Seitzman300.mat', dataLoc, subs{sub}, ses, subs{sub}, ses);
         mat_struct = load(fname);
         %extracts only correlation matrix
         matrix_orig = mat_struct.corrmat;
@@ -72,7 +78,7 @@ for sub = 1:numel(subs)
         for n = 1:size(atlas_params.networks,1) % go through each network
             rois = atlas_params.mods{1,n}; %extract the rois belonging to system n
             num_rois = length(rois); % number of rois in system n
-            
+            net_size(n) = num_rois; 
             %% GET WITHIN SYSTEM CORRELATIONS
             tmp = matrix(rois(1):rois(end),rois(1):rois(end)); % extract correlation values within system n
             
@@ -90,7 +96,7 @@ for sub = 1:numel(subs)
             end
             
             % put those z values in a structure to check/use later
-            means_within(n) = mean(within); 
+            means_within(n) = mean(within, 'omitnan'); 
             within_network{ses,n,sub} = within;
             clear maskmat within tmp % clear up some variables
 
@@ -108,7 +114,7 @@ for sub = 1:numel(subs)
             end
             
             %put those z values in a structure to check/use later
-            means_between(n) = mean(between); 
+            means_between(n) = mean(between, 'omitnan'); 
             between_network{ses,n,sub} = between;
             clear maskmat between tmp % clear up some variables
         end
