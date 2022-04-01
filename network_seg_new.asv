@@ -41,6 +41,7 @@ seg_ind = [];
 % ------------------------------------------------------------------------
 %% MAIN FOR-LOOP
 % ------------------------------------------------------------------------
+
 for sub = 1:numel(subs)
     for ses = 1:sessions(sub)
         %load correlation matrix file
@@ -100,7 +101,7 @@ for sub = 1:numel(subs)
             maskmat(:,rois(1):rois(end)) = 0; % mask out z values within system n
             between = tmp(maskmat==1); % put only between system z values in a variable
             between(between<0) = [];% set negative z values to 0
-            between_corrs = [between_corrs; between];
+            
             %put those z values in a structure to check/use later
             means_between(net) = mean(between); 
             between_network{ses,net,sub} = between;
@@ -121,11 +122,10 @@ for sub = 1:numel(subs)
             
             clear maskmat tmp node_mean_within node_mean_between node_SI% clear up some variables
             %% calculate the segregation index by network by session
-            seg_index_by_net(sub,ses,net) = (mean(within) - mean(between))/mean(within);
+            seg_index(sub,ses,net) = (mean(within) - mean(between))/mean(within);
         end
         
         %% calculate segregation index by session across all networks (maybe exclude unassigned network (1))
-        seg_index_by_s
         network_z.within{sub,ses} = means_within; %put mean within system corrs in main structure
         network_z.between{sub,ses} = means_between; %put mean between system corrs in main structure
         
@@ -139,8 +139,7 @@ for sub = 1:numel(subs)
         save(outfile2, 'nodes_by_net');
     end
     %% calculate segregation index per subject (across all sessions)
-    % either average across all segregation indices across sessions
-    % or average the matrices and calculate segregation index
+    
 end
 
 % calculate seg_ind by network?
