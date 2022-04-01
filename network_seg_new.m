@@ -53,6 +53,7 @@ for sub = 1:numel(subs)
         % are grouped together)
         matrix_sorted = matrix_orig(atlas_params.sorti,atlas_params.sorti); %% this might be an extra step since the matrix might already be stored after sorting in the correct order, but just to be sure, we'll do it again        
         matrix = single(FisherTransform(matrix_sorted));% fisher transform r values
+        sub_corrmat(ses,:,:,:) = matrix;
         clear matrix_orig matrix_sorted
         
         % Separate ROIs by Networks   
@@ -69,6 +70,7 @@ for sub = 1:numel(subs)
             rois = atlas_params.mods{1,net}; %extract the rois belonging to system n
             %num_rois = length(rois); % number of rois in system n
             size_nets(net) = length(rois);
+            weights(net) = size_nets(net)/300;
             %% GET WITHIN SYSTEM CORRELATIONS
             tmp = matrix(rois(1):rois(end),rois(1):rois(end)); % extract correlation values within system n
             %make a mask to only keep correlation values in upper triangle (because
@@ -78,7 +80,8 @@ for sub = 1:numel(subs)
             within = tmp(maskmat); % mask out values in lower triangle
             within(within<0) = []; % set negative z values to 0            
             % put those z values in a structure to check/use later
-            means_within(net) = mean(within); 
+            %means_within(net) = mean(within); 
+            weighted_means_within(net) = weights(net) * mean(within); 
             within_network{ses,net,sub} = within; %maybe delete this
             within_corrs = [within_corrs; within];
             % get within system correlations by node
@@ -102,7 +105,8 @@ for sub = 1:numel(subs)
             between(between<0) = [];% set negative z values to 0
             between_corrs = [between_corrs; between];
             %put those z values in a structure to check/use later
-            means_between(net) = mean(between); 
+            %means_between(net) = mean(between); 
+            weighted_means_between(net) = weights(net) * mean(between);
             between_network{ses,net,sub} = between;
             
             % get between system correlations by node
@@ -125,21 +129,23 @@ for sub = 1:numel(subs)
         end
         
         %% calculate segregation index by session across all networks (maybe exclude unassigned network (1))
-        seg_index_by_s
-        network_z.within{sub,ses} = means_within; %put mean within system corrs in main structure
-        network_z.between{sub,ses} = means_between; %put mean between system corrs in main structure
+        seg_index_by_ses(sub,ses) = (mean(weighted_means_within) - mean(weighted_means_between))/mean(weighted_means_within);
+        seg_index_by_ses2(sub,ses) = (mean(within_corrs) - mean(between_corrs))/mean(within_corrs);
+        %network_z.within{sub,ses} = means_within; %put mean within system corrs in main structure
+        %network_z.between{sub,ses} = means_between; %put mean between system corrs in main structure
         
         %calculate segregation index = (mean within system Z - mean between system Z)/mean within system Z
         %seg_ind(sub,ses) = (mean(means_within)-mean(means_between))/(mean(means_within));
-        out_mat = [node_within node_between node_seg_index];
-        out_dir = '/Users/dianaperez/Desktop/';
-        outfile1 = sprintf('%s/sub-%s_ses-%d_segregation_indices_300rois.mat', out_dir, subs{sub}, ses);
-        save(outfile1, 'out_mat');
-        outfile2 = sprintf('%s/sub-%s_ses-%d_node_segInds_byNet.mat', out_dir, subs{sub}, ses);
-        save(outfile2, 'nodes_by_net');
+%         out_mat = [node_within node_between node_seg_index];
+%         out_dir = '/Users/dianaperez/Desktop/';
+%         outfile1 = sprintf('%s/sub-%s_ses-%d_segregation_indices_300rois.mat', out_dir, subs{sub}, ses);
+%         save(outfile1, 'out_mat');
+%         outfile2 = sprintf('%s/sub-%s_ses-%d_node_segInds_byNet.mat', out_dir, subs{sub}, ses);
+%         save(outfile2, 'nodes_by_net');
     end
     %% calculate segregation index per subject (across all sessions)
     % either average across all segregation indices across sessions
+    sub_avg = squeeze(mean(sub_corrmat));
     % or average the matrices and calculate segregation index
 end
 
