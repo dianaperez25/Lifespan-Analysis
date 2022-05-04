@@ -7,15 +7,18 @@ clear all
 
 %% Paths
 %change paths
-workbenchdir = '/Applications/workbench/bin_macosx64/';
-leftsurf = '/Users/dianaperez/Box/Dependencies/32k_ConteAtlas_v2_distribute/Conte69.L.midthickness.32k_fs_LR.surf.gii';
-rightsurf = '/Users/dianaperez/Box/Dependencies/32k_ConteAtlas_v2_distribute/Conte69.R.midthickness.32k_fs_LR.surf.gii';
-data_dir = '/Users/dianaperez/Desktop/'; %directory where the data is located
-rest_file = [data_dir 'sub-LS05_spCorrMap.dtseries.nii']; % name of the spatial correlation map file
-SNRpath = '/Users/dianaperez/Box/HCP_variants/bottomBrainMask.dtseries.nii';
-outfilepath = '/Users/dianaperez/Desktop/';
 subject = 'LS05';
-
+str = 'allsess_timeA';
+workbenchdir = '/Applications/workbench/bin_macosx64/';
+leftsurf = '/Users/dianaperez/Documents/Dependencies/32k_ConteAtlas_v2_distribute/Conte69.L.midthickness.32k_fs_LR.surf.gii';
+rightsurf = '/Users/dianaperez/Documents/Dependencies/32k_ConteAtlas_v2_distribute/Conte69.R.midthickness.32k_fs_LR.surf.gii';
+%data_dir = '/Volumes/RESEARCH_HD/Lifespan/CNS_analyses/spCor_Maps/';%'/Users/dianaperez/Desktop/'; %directory where the data is located
+data_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Pre-COVID/BIDS/Nifti/derivatives/postFCproc_CIFTI/dconn_cifti_normalwall/';
+SNRpath = '/Users/dianaperez/Documents/Dependencies/bottomBrainMask.dtseries.nii';
+%outfilepath = '/Volumes/RESEARCH_HD/Lifespan/CNS_analyses/Variant_Maps/';
+outfilepath = '/Users/dianaperez/Desktop/';
+%rest_file = [data_dir 'sub-' subject '_' str '_vs_120_avg_corr_LR_cortex_corr.dtseries.nii']; % name of the spatial correlation map file_
+rest_file = [data_dir 'sub-' subject  '_vs_120_allsubs_sptlCorr_cortex_smooth_2.55.dtseries.nii'];
 %%
 threshold = [5];  %% Thresholds used to calculate variants (lowest % or correlation values)
 SNRexclusion = 1;  %% Toggles whether to exclude variants based on SNR, 1 = exclude, 0 = don't exclude
@@ -83,11 +86,11 @@ for x = 1:numel(threshold)
         %This creates the output file names for rest and task 
         %outfilerest = strrep(rest_file{x}, 'vs_120_allsubs_corr_cortex_corr', ['ThresholdedVariantMap_SNRExclude_' num2str(threshold(x))]);
         %outfiletask = strrep(task_files{x}, 'cortex_vs_120_allsubs_corr_cortex_corr', ['ThresholdedVariantMap_SNRExclude_' num2str(threshold)]);
-        outfilerest = [outfilepath '/' subject '_uniqueIDs_variants_sizeExcluded_thresh-' num2str(threshold(x)) '_smooth_2.55.dtseries.nii'];
+        outfilerest = [outfilepath '/' subject '_' str '_uniqueIDs_variants_sizeExcluded_thresh-' num2str(threshold(x)) '_smooth_2.55.dtseries.nii'];
         %strrest = ['SNRExclude_' restsplithalf{x}];
         %strtask = ['SNRExclude_' tasksplithalf{x}];
         %outfilewbtask = [outfilepath '/' subject '_matcheddata_Variant_Size_' strtask '_' num2str(threshold) '.dtseries.nii'];
-        outfilewbrest = [outfilepath '/' subject '_uniqueIDs_matcheddata_REST_Variant_Size_thresh-' num2str(threshold(x)) '_smooth_2.55.dtseries.nii'];
+        outfilewbrest = [outfilepath '/' subject '_' str '_uniqueIDs_matcheddata_REST_Variant_Size_thresh-' num2str(threshold(x)) '_smooth_2.55.dtseries.nii'];
 
         %this creates and writes the file in cifti format
         cifti_rest.data = cifti_rest_final_dat;

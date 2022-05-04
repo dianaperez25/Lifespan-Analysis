@@ -12,17 +12,17 @@ clear all
 % addpath(genpath('/projects/b1081/Darmouth_MIND2'))
 
 % LOCAL
-datadir = '/Volumes/RESEARCH_HD/corrmats/';
-outDir = '/Volumes/RESEARCH_HD/CNS_analyses/';
-atlas_dir = '/Users/dianaperez/Box/Dependencies/';
+datadir = '/Volumes/RESEARCH_HD/Lifespan/CNS_Analyses/corrmats/';
+outDir = '/Volumes/RESEARCH_HD/Lifespan/CNS_Analyses/';
+atlas_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Atlases/';
 addpath(genpath('/Users/dianaperez/Documents/GitHub/GrattonLab-General-Repo/FCPROCESS'));
-addpath(genpath('/Users/dianaperez/Box/Scripts'))
-addpath(genpath('/Users/dianaperez/Box/Dependencies/cifti-matlab-master'))
-addpath(genpath('/Users/dianaperez/Box/Quest_Backup/Darmouth_MIND2'))
+%addpath(genpath('/Users/dianaperez/Box/Scripts'))
+addpath(genpath('/Users/dianaperez/Documents/Dependencies/cifti-matlab-master'))
+%addpath(genpath('/Users/dianaperez/Box/Quest_Backup/Darmouth_MIND2'))
 
 %% VARIABLES
-subs = {'LS02', 'LS03', 'LS04', 'LS05', 'LS07', 'LS08', 'LS10', 'LS11', 'LS14'};
-sessions = [8, 10, 1, 10, 2, 5, 1, 5, 5];
+subs = {'LS02', 'LS03', 'LS04', 'LS05', 'LS07', 'LS08', 'LS10', 'LS11', 'LS14', 'LS16', 'LS17'};
+sessions = [8, 10, 1, 10, 2, 5, 1, 5, 5, 5, 5];
 avg_sessions = 1;
 fisher = 0;
 atlas_params = atlas_parameters_GrattonLab('Seitzman300',atlas_dir);
@@ -66,12 +66,12 @@ simmat = corr(corrlin');
 %% Make Figure --- edit tick marks!!!!
 figure('Position',[1 1 1000 800]);
 imagesc(simmat,[0 1]); colormap('jet');
-hline_new([8,18,19,29,31,36,37,42]+0.5,'k',2);
+hline_new([8,18,19,29,31,36,37,42,47,52]+0.5,'k',2);
 hline_new([3,13,24]+0.5,'k',.5);
-vline_new([8,18,19,29,31,36,37,42]+0.5,'k',2);
+vline_new([8,18,19,29,31,36,37,42, 47,52]+0.5,'k',2);
 vline_new([3,13,24]+0.5,'k',.5);
-set(gca,'XTick',[4,13.5,19,24.5,30.5,34,37,40,45], 'YTick', [4,13.5,19,24.5,30.5,34,37,40,45], 'XTickLabel',...
-    {'LS02', 'LS03', 'LS04', 'LS05', 'LS07', 'LS08', 'LS10', 'LS11', 'LS14'}, 'YTickLabel', {'LS02', 'LS03', 'LS04', 'LS05', 'LS07', 'LS08', 'LS10', 'LS11', 'LS14'});
+set(gca,'XTick',[2,13.5,19,24.5,30.5,34,37,40,45, 50, 55], 'YTick', [4,13.5,19,24.5,30.5,34,37,40,45,50, 55], 'XTickLabel',...
+    {'LS02', 'LS03', 'LS04', 'LS05', 'LS07', 'LS08', 'LS10', 'LS11', 'LS14', 'LS16', 'LS17'}, 'YTickLabel', {'LS02', 'LS03', 'LS04', 'LS05', 'LS07', 'LS08', 'LS10', 'LS11', 'LS14', 'LS16', 'LS17'});
 axis square;
 colorbar;
 title('Correlation Matrix Similarity');
@@ -140,10 +140,10 @@ simmat = corr(corrlin');
 
 figure('Position',[1 1 1000 800]);
 imagesc(simmat,[0 1]); colormap('jet');
-hline_new([8,18]+0.5,'k',2);
-hline_new([3,13,23]+0.5,'k',.5);
-vline_new([8,18]+0.5,'k',2);
-vline_new([3,13,23]+0.5,'k',.5);
+hline_new([0,8,18,28]+0.5,'k',2);
+hline_new([0,3,13,23]+0.5,'k',.5);
+vline_new([0,8,18,28]+0.5,'k',2);
+vline_new([0,3,13,23]+0.5,'k',.5);
 set(gca,'XTick',[4,13.5,23.5], 'YTick', [4,13.5,23.5], 'XTickLabel',...
     {'LS02', 'LS03', 'LS05'}, 'YTickLabel', {'LS02', 'LS03', 'LS05'});
 axis square;
@@ -153,8 +153,28 @@ saveas(gcf,[outDir 'SimilarityMat_longitudinalSubs.tiff'],'tiff');
 close('all');
 
 
+
 ses_pre = [3,5,5];
 ses_post = [5,5,5];
+count = 1;
+within = [];
+between = [];
+for s = 1:numel(subject)
+    lines = [count:count+(ses_pre(s)+ses_post(s))-1];
+    sub_vals = simmat(lines,:);
+    maskmat = ones(length(lines),length(lines));
+    maskmat = logical(triu(maskmat, 1));
+    within_sub = sub_vals(:,lines);
+    within = [within; within_sub(maskmat)];
+    maskmat = ones(size(sub_vals));
+    maskmat(:,lines) = 0;
+    between = [between; sub_vals(maskmat==1)];
+    count = lines(end)+1;
+end
+
+mean(between)
+mean(within)
+
 count = 1;
 clear corrmat
 for sub = 1:numel(subs)
@@ -210,5 +230,5 @@ set(gca,'XTick',[1:3], 'YTick', [1:3], 'XTickLabel',...
 axis square;
 colorbar;
 title('Correlation Matrix Similarity - 1 year apart');
-saveas(gcf,[outDir 'SimilarityMat_longitudinal.tiff'],'tiff');
+saveas(gcf,[outDir 'SimilarityMat_longitudinal_avg.tiff'],'tiff');
 
