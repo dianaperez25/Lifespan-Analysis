@@ -1,15 +1,24 @@
 %% Script for Reliability Analysis
-
+% This script will concatenate each subject's timeseries across runs and sessions, 
+% then split them into a true half and a separata data pool
+% Then create connectivity matrices for the true half and a subset of the data pool 
+% to calculate the similarity and test-retest reliability
 clear all
+% ------------------------------------------------------------------------
+
 %272 frames = 4.99 min, 
 %dataDir = '/projects/b1081/Lifespan/derivatives/preproc_FCProc/corrmats_Seitzman300/';
 dataDir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Post-COVID/BIDS/derivatives/preproc_FCProc/corrmats_Seitzman300/';
+<<<<<<< Updated upstream
 output_dir = '/Users/dianaperez/Desktop/Segregation_Analyses/';
 
+=======
+>>>>>>> Stashed changes
 subject = {'LS02', 'LS03', 'LS05', 'LS08', 'LS11', 'LS14', 'LS16', 'LS17'};
 sessions = 5;
 %runs = [9,9,11,8,9;8,8,8,9,9];
 %pts2sample = 8181; %8181 roughly equivalent to 150 minutes
+<<<<<<< Updated upstream
 %pts2sample = 5454; %number of frames to sample for true half;roughly equals 100 minutes
 pts2sample = 3818;
 %sampStep=272; %5 minutes, will add this number of frames each time it subsamples data
@@ -24,6 +33,12 @@ rgb_colors = [1 0 0;%LS02
             0.9290 0.6940 0.1250;%LS16
             0.4940 0.1840 0.5560];%LS17
         
+=======
+pts2sample = 5454; %number of frames to sample for true half;roughly equals 100 minutes
+sampStep=272; %5 minutes, will add this number of frames each time it subsamples data
+perms = 1000;
+
+>>>>>>> Stashed changes
 for s = 1:numel(subject)
     
     catData = [];
@@ -33,8 +48,13 @@ for s = 1:numel(subject)
         
         %load mat file
         load([dataDir '/sub-' subject{s} '/sub-' subject{s} '_sess-' num2str(i) '_task-rest_corrmat_Seitzman300.mat'])
-        %apply tmask
-        masked_data = sess_roi_timeseries_concat(:,logical(tmask_concat'));
+        %get number of runs
+        num_runs = size(sess_roi_timeseries,2);
+        %randomize runs
+        runs_rand = randperm(num_runs);
+        for 1:num_runs            
+            %apply tmask
+            masked_data = sess_roi_timeseries_concat(:,logical(tmask_concat'));
 
         %concatenate data
     %        catData = [catData masked_data];
@@ -104,8 +124,13 @@ for s = 1:numel(subject)
     
 end
 
+<<<<<<< Updated upstream
 corrs_for_mean = [corr(1:3,1:20); corr(5:8,1:20)];
 mean = mean(corr,1);%mean(corrs_for_mean);
+=======
+%corrs_for_mean = [corr(1:3,1:20; corr(5:6,1:20)];
+mean = mean(corrs_for_mean);
+>>>>>>> Stashed changes
 %plot reliability curves
 times =[5:5:100];
 figure;
