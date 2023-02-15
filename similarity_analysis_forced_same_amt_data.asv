@@ -151,7 +151,7 @@ disp(['The average similarity between subjects is ' mean(between)])
 disp(['The average similarity within subjects is ' mean(within)])
     
 
-%% THE END
+%% THE EN
     
     
     
