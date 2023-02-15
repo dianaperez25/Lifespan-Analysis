@@ -25,7 +25,7 @@ pts2sample = 3808;
 %sampStep=272; %5 minutes, will add this number of frames each time it subsamples data
 sampStep=136;% roughly 2.5 mins -- 272 = 5 minutes, will add this number of frames each time it subsamples data
 %% How many iterations to run
-iterations = 10;
+iterations = 1000;
 %rgb colors for plotting results
 rgb_colors = [1 0 0;%LS02
             0, 1, 0;%LS03
@@ -169,8 +169,9 @@ for s = 1:numel(subject)
     hold on
 end
 
-%% HERE I calculate the mean across subjects separatel
-plot(times_all(1,1:48),mean(1:48), ':', 'Color', [0,0,0], 'LineWidth',3) %average
+%% HERE I calculate the mean across subjects manually
+for t = 1:
+plot(times_all(1,1:48),mean_of_means(1:48), ':', 'Color', [0,0,0], 'LineWidth',3) %average
 
 ylabel('Pearson Correlation (r)');
 xlabel('Time (Minutes)');
