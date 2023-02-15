@@ -12,7 +12,7 @@ clear all
 % addpath(genpath('/projects/b1081/Darmouth_MIND2'))
 
 % LOCAL
-datadir = '/Volumes/RESEARCH_HD/Lifespan/CNS_Analyses/corrmats/';
+datadir = '/Volumes/RESEARCH_HD/Lifespan/CNS_Analyses/corrmats_iNetworks/';
 outDir = '/Volumes/RESEARCH_HD/Lifespan/CNS_Analyses/';
 atlas_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Atlases/';
 addpath(genpath('/Users/dianaperez/Documents/GitHub/GrattonLab-General-Repo/FCPROCESS'));
@@ -21,8 +21,11 @@ addpath(genpath('/Users/dianaperez/Documents/Dependencies/cifti-matlab-master'))
 %addpath(genpath('/Users/dianaperez/Box/Quest_Backup/Darmouth_MIND2'))
 
 %% VARIABLES
-subs = {'LS02', 'LS03', 'LS04', 'LS05', 'LS07', 'LS08', 'LS10', 'LS11', 'LS14', 'LS16', 'LS17'};
-sessions = [8, 10, 1, 10, 2, 5, 1, 5, 5, 5, 5];
+%subs = {'LS02', 'LS03', 'LS04', 'LS05', 'LS07', 'LS08', 'LS10', 'LS11', 'LS14', 'LS16', 'LS17'};
+subs = {'INET001', 'INET002', 'INET003', 'INET005', 'INET006', 'INET010', 'INET016',...
+    'INET018', 'INET019', 'INET030'};
+sessions = [13, 4, 4, 4, 4, 4, 4, 4, 4, 4];
+%sessions = [8, 10, 1, 10, 2, 5, 1, 5, 5, 5, 5];
 avg_sessions = 1;
 fisher = 0;
 atlas_params = atlas_parameters_GrattonLab('Seitzman300',atlas_dir);

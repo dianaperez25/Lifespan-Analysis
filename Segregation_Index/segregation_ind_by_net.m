@@ -14,13 +14,15 @@
 % z-value of all nodes of that system to each other. 
 % Between-system connectivity was calculated as the mean node-to-node 
 % z-value between each node of a system and all nodes of all other systems. 
+%% CHECK THAT NEG CORRS ARE BEING NANED NOT ZEROED
 % ------------------------------------------------------------------------
 clear all
 % ------------------------------------------------------------------------
 %% PATHS
 % ------------------------------------------------------------------------
+%dataLoc = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Segregation_analyses/iNetworks/Nifti/derivatives/preproc_FCProc/corrmats_Seitzman300/';
 dataLoc = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Post-COVID/BIDS/derivatives/preproc_FCProc/corrmats_Seitzman300/';
-output_dir = '/Users/dianaperez/Desktop/Segregation_Analyses/';
+output_dir = '/Users/dianaperez/Desktop/Research/Segregation_Analyses/';
 atlas_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Atlases/';
 atlas = 'Seitzman300';
 atlas_params = atlas_parameters_GrattonLab(atlas,atlas_dir);% load atlas that contains roi info (including which rois belong to each network) 
@@ -32,8 +34,9 @@ weights = net_size./(300-net_size(1));
 %% VARIABLES
 % ------------------------------------------------------------------------
 subs = {'LS02', 'LS03', 'LS05', 'LS08', 'LS11', 'LS14', 'LS16','LS17'};
+%subs = {'INET001','INET002', 'INET003','INET005','INET006','INET010','INET016','INET018','INET019','INET030'};
 sessions = [5, 5, 5, 5, 5, 5, 5, 5];
-
+%sessions = [4,4,4,4,4,4,4,4,4,4];
 % ------------------------------------------------------------------------
 %% BEGIN ANALYSIS
 % ------------------------------------------------------------------------
@@ -60,6 +63,7 @@ for sub = 1:numel(subs)
             maskmat = logical(triu(maskmat,1));
             within = tmp_within(maskmat);
             within(within<0) = [];
+            %within(within<0) = 0;
             mean_within = mean(within);
             net_mean_within(net,ses) = mean_within;
             
@@ -68,6 +72,7 @@ for sub = 1:numel(subs)
             maskmat(:,rois(1):rois(end)) = 0; % mask out within-network correlations
             between = tmp_between(maskmat==1); %between-network correlations
             between(between<0) = [];
+            %between(between<0) = 0;
             mean_between = mean(between);
             net_mean_between(net,ses) = mean_between;
 
@@ -81,6 +86,6 @@ for sub = 1:numel(subs)
          sub_struct.within = net_mean_within;
          sub_struct.between = net_mean_between;
          sub_struct.seg_ind = seg_index_net;
-         save([output_dir subs{sub} '_seg_index_net.mat'], 'sub_struct')
+         save([output_dir subs{sub} '_seg_index_net_withNaNnegs.mat'], 'sub_struct')
 
 end

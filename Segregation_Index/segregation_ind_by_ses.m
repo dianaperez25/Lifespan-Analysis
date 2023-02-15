@@ -19,9 +19,9 @@ clear all
 % ------------------------------------------------------------------------
 %% PATHS
 % ------------------------------------------------------------------------
-%dataLoc = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Post-COVID/BIDS/derivatives/preproc_FCProc/corrmats_Seitzman300/';
-dataLoc = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Segregation_analyses/iNetworks/Nifti/derivatives/preproc_FCProc/corrmats_Seitzman300/';
-output_dir = '/Users/dianaperez/Desktop/Segregation_Analyses/';
+dataLoc = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Post-COVID/BIDS/derivatives/preproc_FCProc/corrmats_Seitzman300/';
+%dataLoc = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Segregation_analyses/iNetworks/Nifti/derivatives/preproc_FCProc/corrmats_Seitzman300/';
+output_dir = '/Users/dianaperez/Desktop/Research/Segregation_Analyses/';
 atlas_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Atlases/';
 atlas = 'Seitzman300';
 atlas_params = atlas_parameters_GrattonLab(atlas,atlas_dir);% load atlas that contains roi info (including which rois belong to each network) 
@@ -32,10 +32,10 @@ weights = net_size./(300-net_size(1));
 % ------------------------------------------------------------------------
 %% VARIABLES
 % ------------------------------------------------------------------------
-%subs = {'LS02', 'LS03', 'LS05', 'LS08', 'LS11', 'LS14', 'LS16','LS17'};
-subs = {'INET001','INET002', 'INET003','INET005','INET006','INET010','INET016','INET018','INET019','INET030'};
-%sessions = [5, 5, 5, 5, 5, 5, 5, 5];
-sessions = [4,4,4,4,4,4,4,4,4,4];
+subs = {'LS02', 'LS03', 'LS05', 'LS08', 'LS11', 'LS14', 'LS16','LS17'};
+%subs = {'INET001','INET002', 'INET003','INET005','INET006','INET010','INET016','INET018','INET019','INET030'};
+sessions = [5, 5, 5, 5, 5, 5, 5, 5];
+%sessions = [4,4,4,4,4,4,4,4,4,4];
 % ------------------------------------------------------------------------
 %% BEGIN ANALYSIS
 % ------------------------------------------------------------------------
@@ -61,7 +61,8 @@ for sub = 1:numel(subs)
             maskmat = ones(size(tmp_within));
             maskmat = logical(triu(maskmat,1));
             within = tmp_within(maskmat);
-            within(within<0) = [];
+            %within(within<0) = [];
+            within(within<0) = 0;
             all_within = [all_within; within];
             %all_within(net,ses) = all_within;
             
@@ -69,7 +70,8 @@ for sub = 1:numel(subs)
             maskmat = ones(size(tmp_between)); % mask out within-network correlations
             maskmat(:,rois(1):rois(end)) = 0; % mask out within-network correlations
             between = tmp_between(maskmat==1); %between-network correlations
-            between(between<0) = [];
+            %between(between<0) = [];
+            between(between<0) = 0;
             all_between = [all_between;between];
 
             count = count + net_size(net);
@@ -78,5 +80,5 @@ for sub = 1:numel(subs)
             ses_SI(sub,ses) = (mean(all_within) - mean(all_between))/mean(all_within);                      
     end
 end
-save([output_dir 'INET_allsubs_seg_index_ses.mat'], 'ses_SI')
+save([output_dir 'LS_allsubs_seg_index_ses_with0negs.mat'], 'ses_SI')
 

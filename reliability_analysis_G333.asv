@@ -6,8 +6,8 @@ clear all
 
 %dataDir = '/projects/b1081/Lifespan/derivatives/preproc_FCProc/corrmats_Seitzman300/';
 %dataDir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Post-COVID/BIDS/derivatives/preproc_FCProc/corrmats_Seitzman300/';
-dataDir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Segregation_analyses/iNetworks/Nifti/derivatives/preproc_FCProc/corrmats_Seitzman300/';
-
+%dataDir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Segregation_analyses/iNetworks/Nifti/derivatives/preproc_FCProc/corrmats_Seitzman300/';
+dataDir = '/Users/dianaperez/Desktop/FC_Parcels_333/';
 output_dir = '/Users/dianaperez/Desktop/';
 
 %% VARIABLES
@@ -15,8 +15,8 @@ subject = {'LS02', 'LS03', 'LS05', 'LS08', 'LS11', 'LS14', 'LS16', 'LS17'};
 sessions = 5;
 %runs = [9,9,11,8,9;8,8,8,9,9];
 
-subject = {'INET001','INET002', 'INET003','INET005','INET006','INET010','INET016','INET018','INET019','INET030'};
-sessions = 4;
+%subject = {'INET001','INET002', 'INET003','INET005','INET006','INET010','INET016','INET018','INET019','INET030'};
+%sessions = 4;
 %% How many points to sample for "true" half
 %pts2sample = 8181; %8181 roughly equivalent to 150 minutes
 %pts2sample = 5454; %number of frames to sample for true half;roughly equals 100 minutes
@@ -25,7 +25,7 @@ pts2sample = 3808;
 %sampStep=272; %5 minutes, will add this number of frames each time it subsamples data
 sampStep=136;% roughly 2.5 mins -- 272 = 5 minutes, will add this number of frames each time it subsamples data
 %% How many iterations to run
-iterations = 1000;
+iterations = 10;
 %rgb colors for plotting results
 rgb_colors = [1 0 0;%LS02
             0, 1, 0;%LS03
@@ -35,27 +35,27 @@ rgb_colors = [1 0 0;%LS02
             0.4660 0.6740 0.188;%LS14
             0.9290 0.6940 0.1250;%LS16
             0.4940 0.1840 0.5560];%LS17
-        rgb_colors = [0 0 0;
-            0, 0, 0;
-            0, 0, 0;
-            0, 0, 0;
-            0, 0, 0;
-            0, 0, 0;
-            0, 0, 0;
-            0, 0, 0;
-            0, 0, 0];
+        %rgb_colors = [0 0 0;
+%             0, 0, 0;
+%             0, 0, 0;
+%             0, 0, 0;
+%             0, 0, 0;
+%             0, 0, 0;
+%             0, 0, 0;
+%             0, 0, 0;
+%             0, 0, 0];
         
 for sub = 1:numel(subject)    
     catData = [];
     catTmask = [];    
     for i = 1:sessions        
         %load mat file
-        load([dataDir '/sub-' subject{sub} '/sub-' subject{sub} '_sess-' num2str(i) '_task-rest_corrmat_Seitzman300.mat'])
+        load([dataDir '/sub-' subject{sub} '_rest_ses-' num2str(i) '_parcel_timecourse.mat'])
         %apply tmask
-        masked_data = sess_roi_timeseries_concat(:,logical(tmask_concat'));
+        masked_data = parcel_time';
         %concatenate data
         catData = [catData masked_data];
-        catTmask = [catTmask tmask_concat'];
+        %catTmask = [catTmask tmask_concat'];
     end
 
     disp(sprintf('Total number of sample points for subject %s is %d by %d...', subject{sub}, size(catData,1), size(catData,2)))
@@ -90,7 +90,7 @@ for sub = 1:numel(subject)
         %make corrmats for true half
         truehalf = catData(:,true_half_inds);
         corrmat_truehalf = paircorr_mod(truehalf');
-        maskmat = ones(300);
+        maskmat = ones(333);
         maskmat = logical(triu(maskmat, 1));
         truehalf_corrlin(1,:) = corrmat_truehalf(maskmat);
         
@@ -169,6 +169,7 @@ for s = 1:numel(subject)
     hold on
 end
 
+%% HERE I calculate the mean across subjects separatel
 plot(times_all(1,1:48),mean(1:48), ':', 'Color', [0,0,0], 'LineWidth',3) %average
 
 ylabel('Pearson Correlation (r)');
