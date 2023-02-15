@@ -195,7 +195,7 @@ ax = gca;
 ax.FontSize = 24;
 set(gcf, 'Units', 'Normalized', 'OuterPosition', [0.5, 0.7, 0.5, 0.7]);
 
-print(gcf,['/Volumes/RESEARCH_HD/Lifespan/CNS_Analyses/ReliabilityiNETRestDatatruhalf' num2str(pts2sample) '.jpg'],'-dpng','-r300');
+print(gcf,[output_dir 'ReliabilityiNETRestDatatruhalf' num2str(pts2sample) '.jpg'],'-dpng','-r300');
 
 
 
