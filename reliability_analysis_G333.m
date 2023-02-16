@@ -174,7 +174,7 @@ for t = 1:48
     tmp = [];
     for s = 1:numel(subject)
         if exist(means{1,s}{t})
-            tmp = [tmp;means{1,s}{t}]
+            tmp = [tmp;means{1,s}{t}];
         else
             continue;
         end
@@ -195,7 +195,7 @@ ax = gca;
 ax.FontSize = 24;
 set(gcf, 'Units', 'Normalized', 'OuterPosition', [0.5, 0.7, 0.5, 0.7]);
 
-print(gcf,[output_dir 'ReliabilityiNETRestDatatruhalf' num2str(pts2sample) '.jpg'],'-dpng','-r300');
+print(gcf,[output_dir 'Lifespan_Reliability_truehalf_' num2str(pts2sample) '.jpg'],'-dpng','-r300');
 
 
 

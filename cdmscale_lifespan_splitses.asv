@@ -5,14 +5,12 @@ clear all
 %% PATHS
 
 data_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Post-COVID/BIDS/derivatives/preproc_FCProc/corrmats_Seitzman300/';
-data_dir = '/';
 atlas_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Atlases/';
 
 %% VARIABLES
-atlas = 'Gordon333';
+atlas = 'Seitzman300';
 % make the input matrix
 subjects = {'LS02', 'LS03', 'LS05', 'LS08', 'LS11', 'LS14', 'LS16', 'LS17'};
-sessions = 5;
 rgb_colors = [1, 0, 0; 0, 1, 0; 0, 0, 1; 0, 1, 1; 1, 0, 1; 0, 0, 0; 0.4940, 0.1840, 0.5560; 0.9290, 0.6940, 0.1250];
 groups = [1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8];
 
@@ -25,26 +23,22 @@ concat_data = [];
 
 %% add code to separate by session, get minimum amt of data per session
 for sub = 1:numel(subjects)  
-    for ses = 1:sessions
-        if strcmpi(atlas, 'Seitzman300')
-            load([data_dir 'sub-' subjects{sub} '/sub-' subjects{sub} '_sess-' num2str(ses) '_task-rest_corrmat_Seitzman300.mat'])
-            masked_data = sess_roi_timeseries_concat(:,logical(tmask_concat'));
-        elseif strcmpi(atlas, 'Gordon333')
-            load([data_dir '/sub-' subject{s} '_rest_ses-' num2str(i) '_parcel_timecourse.mat'])
-            masked_data = parcel_time(logical(tmask_concat),:)';
-        end
+    for ses = 1:5
+        load([data_dir 'sub-' subjects{sub} '/sub-' subjects{sub} '_sess-' num2str(ses) '_task-rest_corrmat_Seitzman300.mat'])
+        masked_data = sess_roi_timeseries_concat(:,logical(tmask_concat'));
         allSubs_amtData(ses,sub) = size(masked_data,2);
         concat_data = [concat_data masked_data];
     end
     all_subs_data{sub}=concat_data;
     concat_data = [];
-    clear sess_roi_timeseries_concat parcel_time
+    clear sess_roi_timeseries_concat
 end
 
 total_data = sum(allSubs_amtData,1);
 smallest_amt = min(total_data);
 amt_data = floor(smallest_amt/2);
 
+    
 for sub = 1:numel(subjects) 
     
     masked_data = all_subs_data{sub};        
