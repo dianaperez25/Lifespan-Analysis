@@ -1,4 +1,4 @@
-function dconn_dat = make_dconn(input_data,tmask_data,save_dconn,varargin)
+function dconn_dat = make_dconn(input_data,tmask_data,template_fname,save_dconn,varargin)
 % 
 %
 % Script to take CIFTI input and output a dconn
@@ -12,6 +12,7 @@ function dconn_dat = make_dconn(input_data,tmask_data,save_dconn,varargin)
 % matrix
 % tmask_data: either fname string to input tmask or already loaded logical
 % vector to use as tmask
+% template_fname = fname string for a template of the same size/shape (usually the cifti input) '/projects/b1081/iNetworks/Nifti/derivatives/postFCproc_CIFTI/cifti_timeseries_normalwall/sub-INET003_ses-1_task-rest_run-01_LR_surf_subcort_222_32k_fsLR_smooth2.55.dtseries.nii';
 % save_dconn: 1 or 0, save out dconn for viewing/use (if 1, varargin =
 % string with output file name (full path))
 %
@@ -29,32 +30,22 @@ function dconn_dat = make_dconn(input_data,tmask_data,save_dconn,varargin)
 % dconn template: start with dtseries and modify accordingly (this assumes
 % cortex + subcortex)
 %template_fname = '/projects/b1081/MSC/TaskFC/FCProc_MSC01_mem_pass2/cifti_timeseries_normalwall_native_freesurf/vc38671_LR_surf_subcort_333_32k_fsLR_smooth2.55.dtseries.nii';
-template_fname = '/projects/b1081/iNetworks/Nifti/derivatives/postFCproc_CIFTI/cifti_timeseries_normalwall/sub-INET003_ses-1_task-rest_run-01_LR_surf_subcort_222_32k_fsLR_smooth2.55.dtseries.nii';
-voxnum = 65625; % Cortex + subcortex/cerebellum %Cortex only: voxnum = 59412;
-subs = ['LS02', 'LS03'];
-
-for s = 1:size(subs)
-
-    %% FIND DATA
-    data_folder = '/projects/b1081/Lifespan/derivatives/postFCproc_CIFTI/cifti_timeseries_normalwall/';
-    data_file = readtable(input_data);
-    numdatas=size(df.sub,1);
+%voxnum = 65625; % Cortex + subcortex/cerebellum %Cortex only: voxnum = 59412;
+voxnum = 87129;   % this is actually how big our CIFTIs look, prob due to 222 res
     
-    %% LOAD DATA
-    % check input file to see if it is a:
-    % (i) filename (in which case load)
-    % (ii) already loaded matrix (in which case pass forward
-    disp('Loading data...')
-%     if ischar(input_data)
-%         input_file = input_data;
-%         tmp = ft_read_cifti_mod(input_file);
-%         input_data = tmp.data;
-%         clear tmp;
-%     end
+%% LOAD DATA
+% check input file to see if it is a:
+% (i) filename (in which case load)
+% (ii) already loaded matrix (in which case pass forward
+disp('Loading data...')
+if ischar(input_data)
+    input_file = input_data;
+    tmp = ft_read_cifti_mod(input_file);
+    input_data = tmp.data;
+    clear tmp;
+end
 
-    for x = 1:numel(data_files.name)
-        data = ft_read_cifti_mod(data_files(x).name);
-        input_data = data.data;
+
 %% LOAD TMASK
 % check if tmask data is a file name or an input matrix string
 % (i) if filename, load tmask
