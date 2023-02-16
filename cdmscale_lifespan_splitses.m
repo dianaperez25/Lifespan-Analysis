@@ -4,8 +4,8 @@ clear all
 
 %% PATHS
 
-data_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Post-COVID/BIDS/derivatives/preproc_FCProc/corrmats_Seitzman300/';
-data_dir = '/';
+%data_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Post-COVID/BIDS/derivatives/preproc_FCProc/corrmats_Seitzman300/';
+data_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Post-COVID/BIDS/derivatives/postFCproc_CIFTI/FC_parcels_333/';
 atlas_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Atlases/';
 
 %% VARIABLES
@@ -30,7 +30,7 @@ for sub = 1:numel(subjects)
             load([data_dir 'sub-' subjects{sub} '/sub-' subjects{sub} '_sess-' num2str(ses) '_task-rest_corrmat_Seitzman300.mat'])
             masked_data = sess_roi_timeseries_concat(:,logical(tmask_concat'));
         elseif strcmpi(atlas, 'Gordon333')
-            load([data_dir '/sub-' subject{s} '_rest_ses-' num2str(i) '_parcel_timecourse.mat'])
+            load([data_dir '/sub-' subjects{sub} '_rest_ses-' num2str(ses) '_parcel_timecourse.mat'])
             masked_data = parcel_time(logical(tmask_concat),:)';
         end
         allSubs_amtData(ses,sub) = size(masked_data,2);
