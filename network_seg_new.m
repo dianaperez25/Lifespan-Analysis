@@ -78,7 +78,7 @@ for sub = 1:numel(subs)
             maskmat = ones(size_nets(net)); 
             maskmat = logical(triu(maskmat,1));
             within = tmp(maskmat); % mask out values in lower triangle
-            within(within<0) = []; % set negative z values to 0            
+            within(within<0) = 0; % set negative z values to 0            
             % put those z values in a structure to check/use later
             %means_within(net) = mean(within); 
             weighted_means_within(net) = weights(net) * mean(within); 
@@ -89,7 +89,7 @@ for sub = 1:numel(subs)
                 node = rois(roi);
                 node_values = tmp(roi,:);
                 node_values(roi) = []; 
-                node_values(node_values<0) = [];
+                node_values(node_values<0) = 0;
                 node_mean_within(roi) = mean(node_values);
                 node_within(node) = node_mean_within(roi);
             end                    
@@ -114,7 +114,7 @@ for sub = 1:numel(subs)
             for roi = 1:size_nets(net)
                 node = rois(roi);
                 node_values = tmp(roi,:); 
-                node_values(node_values<0) = [];
+                node_values(node_values<0) = 0;
                 node_mean_between(roi) = mean(node_values);
                 node_between(node) = node_mean_between(roi);
                 node_SI(roi) = (node_mean_within(roi) - node_mean_between(roi))/node_mean_within(roi);
