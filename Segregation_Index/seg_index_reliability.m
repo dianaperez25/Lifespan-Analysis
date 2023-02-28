@@ -13,11 +13,13 @@ clear all
 data_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Post-COVID/BIDS/derivatives/postFCproc_CIFTI/FC_Parcels_333/';
 subject = {'LS02', 'LS03', 'LS05', 'LS08', 'LS11', 'LS14', 'LS16', 'LS17'};%, 'INET001','INET002', 'INET003','INET005','INET006','INET010','INET016','INET018','INET019','INET030'};
 output_dir = '/Users/dianaperez/Desktop/';
+output_str = 'neg_corrs_deleted'; %something to add to the filename for the output figures to differentiate it from others?
 atlas_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Atlases/';
 atlas = 'Parcels333';
 atlas_params = atlas_parameters_GrattonLab(atlas,atlas_dir);% load atlas that contains roi info (including which rois belong to each network) 
 
 %% VARIABLES
+neg_corrs = 'nan'; % either 'nan', 'zero' or 'asis'
 true_half = 70; % in minutes; how much data should be in the true half (the chunk of data used as reference for the test-retest analysis)
 steps = 2.5; % in minutes; how much data should be added to the chunk of data being compared to the true half at each step
 TR = 1.1; % used to calculate how many frames equal the amount of data needed
@@ -32,9 +34,8 @@ rgb_colors_LS = [1 0 0;%LS02
             0.4660 0.6740 0.188;%LS14
             0.9290 0.6940 0.1250;%LS16
             0.4940 0.1840 0.5560];%LS17
-%rgb_colors_iNet = {'#808080', '#594D5B', '#C5C6D0', '#7F7D9C', '#9897A9', '#787276', '#7C6E7F', '#564C4D', '#696880', '#4D4C5C'}; % different shades of grey
+rgb_colors_iNet = {'#808080', '#594D5B', '#C5C6D0', '#7F7D9C', '#9897A9', '#787276', '#7C6E7F', '#564C4D', '#696880', '#4D4C5C'}; % different shades of grey
 
-        
 for s = 1:numel(subject)  
     catData = [];
     catTmask = [];
@@ -90,7 +91,7 @@ for s = 1:numel(subject)
         
         truehalf = catData(:,true_half_inds);
     corrmat_truehalf = paircorr_mod(truehalf');
-    [seg_index_truehalf(p,s)] = calculate_seg_index(corrmat_truehalf, atlas_params, atlas);
+    [seg_index_truehalf(p,s)] = calculate_seg_index(corrmat_truehalf, atlas_params, atlas, neg_corrs);
 
     %calculate how many samples we have data for
     rest_of_data = catData;
@@ -117,7 +118,7 @@ for s = 1:numel(subject)
             sampledDatas{t} = rest_of_data(:,inds_this_chunk);
             
         corrmat = paircorr_mod(sampledDatas{t}');
-        [sub_seg_index(p,t) between_FC(p,t) within_FC(p,t)] = calculate_seg_index(corrmat, atlas_params, atlas);
+        [sub_seg_index(p,t) between_FC(p,t) within_FC(p,t)] = calculate_seg_index(corrmat, atlas_params, atlas, neg_corrs);
     end
 
     
@@ -139,6 +140,7 @@ for s = 1:numel(subject)
     clear true_half true_half_corrlin rest_of_data indices_for_rest_of_data
     clear corrmat corrmat_truehalf masked_data sampledDatas tmask tmask_concat
     clear truehalf sess_roi_timeseries sess_roi_timeseries_concat
+    clear between_FC within_FC
     
 end
 
@@ -176,7 +178,7 @@ hleg1.FontSize = 20;
 ax = gca;
 ax.FontSize = 24;
 % 
-print(gcf,[output_dir '/ReliabilityLifespanSegIndex_Diff.jpg'],'-dpng','-r300');
+print(gcf,[output_dir '/ReliabilityLifespanSegIndex_Diff_' output_str '.jpg'],'-dpng','-r300');
 
 figure;
 for s = 1:numel(subject)
@@ -207,7 +209,7 @@ hleg1.FontSize = 20;
 ax = gca;
 ax.FontSize = 20;
 
-print(gcf,[output_dir '/ReliabilityLifespanSegIndex.jpg'],'-dpng','-r300');
+print(gcf,[output_dir '/ReliabilityLifespanSegIndex_' output_str '.jpg'],'-dpng','-r300');
 
 % figure;
 % for s = 1:numel(subject)
@@ -245,7 +247,7 @@ hleg1.FontSize = 20;
 ax = gca;
 ax.FontSize = 20;
 
-print(gcf,[output_dir '/ReliabilityBetweenFC.jpg'],'-dpng','-r300');
+print(gcf,[output_dir '/ReliabilityBetweenFC_' output_str '.jpg'],'-dpng','-r300');
 
 figure;
 for s = 1:numel(subject)
@@ -276,9 +278,9 @@ hleg1.FontSize = 20;
 ax = gca;
 ax.FontSize = 20;
 
-print(gcf,[output_dir '/ReliabilityWithinFC.jpg'],'-dpng','-r300');
+print(gcf,[output_dir '/ReliabilityWithinFC_' output_str '.jpg'],'-dpng','-r300');
 
-function [seg_index between_FC within_FC] = calculate_seg_index(matrix, atlas_params, atlas)
+function [seg_index between_FC within_FC] = calculate_seg_index(matrix, atlas_params, atlas, neg_corrs)
 all_within = [];
 all_between = [];
 matrix = single(FisherTransform(matrix));% fisher transform r values
@@ -309,7 +311,15 @@ end
         maskmat = ones(size(tmp_between)); % mask out within-network correlations
         maskmat(:,rois(1):rois(end)) = 0; % mask out within-network correlations
         between = tmp_between(maskmat==1); %between-network correlations
-        between(between<0) = [];
+        if strcmpi(neg_corrs, 'nan')
+            between(between<0) = [];
+        elseif strcmpi(neg_corrs, 'zero')
+            between(between<0) = 0;
+        elseif strcmpi(neg_corrs, 'asis')
+            continue;
+        else
+            error('Invalid method for dealing with negative correlations: please specify whether negative correlations should be made to equal to zero, deleted, or left alone.');
+        end
         all_between = [all_between;between];
 
         count = count + net_size(net);

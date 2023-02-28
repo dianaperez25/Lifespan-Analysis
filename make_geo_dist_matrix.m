@@ -31,21 +31,21 @@ for sub = 1:numel(subject)
     % euclidean center-to-center distances
     coords_all = [L_surf; R_surf];
     D = pdist(coords_all,'euclidean');
-    Z = squareform(D);
+    %dist_mat = squareform(D);
     
     % and now replace with geodesic for all within hemisphere comparisons
     output_fname_L = sprintf('%s/sub-%s_distances_left.dconn.nii', out_dir, subject{sub});
-    command = [wb_path 'wb_command -surface-geodesic-distance-all-to-all ' L_surf_name ' ' output_fname_L];
+    command = [wb_path 'wb_command -surface-geodesic-distance-all-to-all ' L_surf_fname ' ' output_fname_L];
     system(command);
     output_fname_R = sprintf('%s/sub-%s_distances_right.dconn.nii', out_dir, subject{sub});
-    command = [wb_path 'wb_command -surface-geodesic-distance-all-to-all ' R_surf_name ' ' output_fname_R];
+    command = [wb_path 'wb_command -surface-geodesic-distance-all-to-all ' R_surf_fname ' ' output_fname_R];
     system(command);
     
     L_geo = ft_read_cifti_mod(output_fname_L);
     R_geo = ft_read_cifti_mod(output_fname_R);
     
-%     Z_geo = Z;
-%     Z_geo(1:length(indpos_L),1:length(indpos_L)) = distmat_surf_L(indpos_L,indpos_L); %need this function 
+
+     %Z_geo(1:length(indpos_L),1:length(indpos_L)) = distmat_surf_L(indpos_L,indpos_L); %need this function 
 %     Z_geo(length(indpos_L)+1:length(indpos_R)+length(indpos_L),length(indpos_L)+1:length(indpos_R)+length(indpos_L)) = distmat_surf_R(indpos_R,indpos_R);
 %     
 %     save([out_dir subject '_vertices_distmat.mat'],'Z','Z_geo');
