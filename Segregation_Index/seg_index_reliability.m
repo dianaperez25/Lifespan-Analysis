@@ -8,13 +8,15 @@
 
 %% withinFC and betweenFC data is not saving right. I think I need to clear the variable after each sub
 clear all
-
+addpath(genpath('/projects/b1081/Scripts/CIFTI_RELATED/'))
+addpath(genpath('/scratch/dcr8536'))
 %% PATHS
-data_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Post-COVID/BIDS/derivatives/postFCproc_CIFTI/FC_Parcels_333/';
+%data_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Post-COVID/BIDS/derivatives/postFCproc_CIFTI/FC_Parcels_333/';
+data_dir = '/scratch/dcr8536/TimeB/Nifti/postFCproc_CIFTI/FC_Parcels_333/';
 subject = {'LS02', 'LS03', 'LS05', 'LS08', 'LS11', 'LS14', 'LS16', 'LS17'};%, 'INET001','INET002', 'INET003','INET005','INET006','INET010','INET016','INET018','INET019','INET030'};
-output_dir = '/Users/dianaperez/Desktop/';
+output_dir = '/scratch/dcr8536/seg_index/';
 output_str = 'neg_corrs_deleted'; %something to add to the filename for the output figures to differentiate it from others?
-atlas_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Atlases/';
+atlas_dir = '/projects/b1081/Atlases/';
 atlas = 'Parcels333';
 atlas_params = atlas_parameters_GrattonLab(atlas,atlas_dir);% load atlas that contains roi info (including which rois belong to each network) 
 
@@ -23,9 +25,9 @@ neg_corrs = 'nan'; % either 'nan', 'zero' or 'asis'
 true_half = 70; % in minutes; how much data should be in the true half (the chunk of data used as reference for the test-retest analysis)
 steps = 2.5; % in minutes; how much data should be added to the chunk of data being compared to the true half at each step
 TR = 1.1; % used to calculate how many frames equal the amount of data needed
-pts2sample = (60*true_half)/TR; %number of frames to sample for true half
-sampStep=(60*steps)/TR; % will add this number of frames each time it subsamples data
-iterations = 10;
+pts2sample = round((60*true_half)/TR); %number of frames to sample for true half
+sampStep = round((60*steps)/TR); % will add this number of frames each time it subsamples data
+iterations = 1000;
 rgb_colors_LS = [1 0 0;%LS02
             0, 1, 0;%LS03
             0, 0, 1;%LS05
@@ -303,7 +305,15 @@ end
         maskmat = ones(size(tmp_within));
         maskmat = logical(triu(maskmat,1));
         within = tmp_within(maskmat);
-        within(within<0) = [];
+        if strcmpi(neg_corrs, 'nan')
+            within(within<0) = [];
+        elseif strcmpi(neg_corrs, 'zero')
+            within(within<0) = 0;
+        elseif strcmpi(neg_corrs, 'asis')
+            continue;
+        else
+            error('Invalid method for dealing with negative correlations: please specify whether negative correlations should be made to equal to zero, deleted, or left alone.');
+        end
         all_within = [all_within; within];
         %all_within(net,ses) = all_within;
 
