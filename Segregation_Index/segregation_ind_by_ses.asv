@@ -19,9 +19,8 @@ clear all
 % ------------------------------------------------------------------------
 %% PATHS
 % ------------------------------------------------------------------------
-%data_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Post-COVID/BIDS/derivatives/preproc_FCProc/corrmats_Seitzman300/';
+data_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Post-COVID/BIDS/derivatives/preproc_FCProc/corrmats_Seitzman300/';
 %data_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Segregation_analyses/iNetworks/Nifti/derivatives/preproc_FCProc/corrmats_Seitzman300/';
-data_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Post-COVID/BIDS/derivatives/postFCproc_CIFTI/FC_Parcels_333/';
 output_dir = '/Users/dianaperez/Desktop/Research/Segregation_Analyses/';
 if ~exist(output_dir)
     mkdir(output_dir)
@@ -39,14 +38,14 @@ iNet_sessions = 4;
 % ------------------------------------------------------------------------
 %% OPTIONS
 % ------------------------------------------------------------------------
-neg_corrs = 'asis'; % choose: 'nan', 'zero', 'asis'. How to deal with negative correlations
+neg_corrs = 'nan'; % choose: 'nan', 'zero', 'asis'. How to deal with negative correlations
 data_set = 'Lifespan'; %'Lifespan' or 'iNetworks' 
-atlas = 'Parcels333';
+atlas = 'Seitzman300';
 match_data = 1; % if 1, will calculate the minimum possible amount of data available and will force all subs to have that amount of data
 amt_data = 968; % if this is commented out or set to 0, then the script will calculate it
 
 atlas_params = atlas_parameters_GrattonLab(atlas,atlas_dir);% load atlas that contains roi info (including which rois belong to each network) 
-for net = 1:length(atlas_params.networks)
+for net = 1:14
     net_size(net) = length(atlas_params.mods{1,net});
 end
 weights = net_size./(300-net_size(1));
@@ -89,7 +88,7 @@ end
 if strcmpi(data_set, 'Lifespan')
     subject = LS_subject;
     sessions = LS_sessions;
-elseif strcmpi(data_set, 'iNetworks')
+elseif strcmpo(data_set, 'iNetworks')
     subject = iNet_subject;
     sessions = iNet_sessions;
 end
@@ -104,12 +103,10 @@ for s = 1:numel(subject)
             load([data_dir '/sub-' subject{s} '/sub-' subject{s} '_sess-' num2str(i) '_task-rest_corrmat_Seitzman300.mat'])
             masked_data = sess_roi_timeseries_concat(:,logical(tmask_concat'));
             ind = 1;
-            num_nodes = 300;
         elseif strcmpi(atlas, 'Parcels333')
             load([data_dir '/sub-' subject{s} '_rest_ses-' num2str(i) '_parcel_timecourse.mat'])
             masked_data = parcel_time(logical(tmask_concat), :)';
             ind = 2;
-            num_nodes = 333;
         end
         if match_data == 0 %if we don't care about matching data, then use the max amount of data available per subject/session
             amt_data = size(masked_data,2);
@@ -139,11 +136,13 @@ for s = 1:numel(subject)
                 within(within<0) = [];
             elseif strcmpi(neg_corrs, 'zero')
                 within(within<0) = 0;
+            elseif strcmpi(neg_corrs, 'asis')
+                continue;
             end
             all_within = [all_within; within];
             %all_within(net,ses) = all_within;
             
-            tmp_between = matrix(rois(1):rois(end), 1:num_nodes); % all network correlations
+            tmp_between = matrix(rois(1):rois(end), 1:300); % all network correlations
             maskmat = ones(size(tmp_between)); % mask out within-network correlations
             maskmat(:,rois(1):rois(end)) = 0; % mask out within-network correlations
             between = tmp_between(maskmat==1); %between-network correlations
@@ -151,6 +150,8 @@ for s = 1:numel(subject)
                 between(between<0) = [];
             elseif strcmpi(neg_corrs, 'zero')
                 between(between<0) = 0;
+            elseif strcmpi(neg_corrs, 'asis')
+                continue;
             end
             all_between = [all_between;between];
 
