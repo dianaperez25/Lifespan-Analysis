@@ -1,3 +1,4 @@
+function seg_index_reliability(subject, neg_corrs, data_dir, atlas, output_str, iterations)
 %% Segregation index with increasing amounts of data
 % this script calculates the reliability of segregation index measurement
 % and how the value of the segregation index changes with increasing
@@ -7,27 +8,27 @@
 
 
 %% withinFC and betweenFC data is not saving right. I think I need to clear the variable after each sub
-clear all
+%clear all
 addpath(genpath('/projects/b1081/Scripts/CIFTI_RELATED/'))
 addpath(genpath('/scratch/dcr8536'))
 %% PATHS
 %data_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Post-COVID/BIDS/derivatives/postFCproc_CIFTI/FC_Parcels_333/';
-data_dir = '/scratch/dcr8536/TimeB/Nifti/postFCproc_CIFTI/FC_Parcels_333/';
-subject = {'LS02', 'LS03', 'LS05', 'LS08', 'LS11', 'LS14', 'LS16', 'LS17'};%, 'INET001','INET002', 'INET003','INET005','INET006','INET010','INET016','INET018','INET019','INET030'};
+%data_dir = '/scratch/dcr8536/TimeB/Nifti/postFCproc_CIFTI/FC_Parcels_333/';
+%subject = {'LS02', 'LS03', 'LS05', 'LS08', 'LS11', 'LS14', 'LS16', 'LS17'};%, 'INET001','INET002', 'INET003','INET005','INET006','INET010','INET016','INET018','INET019','INET030'};
 output_dir = '/scratch/dcr8536/seg_index/';
-output_str = 'neg_corrs_deleted'; %something to add to the filename for the output figures to differentiate it from others?
+%output_str = 'neg_corrs_deleted'; %something to add to the filename for the output figures to differentiate it from others?
 atlas_dir = '/projects/b1081/Atlases/';
-atlas = 'Parcels333';
+%atlas = 'Parcels333';
 atlas_params = atlas_parameters_GrattonLab(atlas,atlas_dir);% load atlas that contains roi info (including which rois belong to each network) 
 
 %% VARIABLES
-neg_corrs = 'nan'; % either 'nan', 'zero' or 'asis'
+%neg_corrs = 'nan'; % either 'nan', 'zero' or 'asis'
 true_half = 70; % in minutes; how much data should be in the true half (the chunk of data used as reference for the test-retest analysis)
 steps = 2.5; % in minutes; how much data should be added to the chunk of data being compared to the true half at each step
 TR = 1.1; % used to calculate how many frames equal the amount of data needed
 pts2sample = round((60*true_half)/TR); %number of frames to sample for true half
 sampStep = round((60*steps)/TR); % will add this number of frames each time it subsamples data
-iterations = 1000;
+%iterations = 1000;
 rgb_colors_LS = [1 0 0;%LS02
             0, 1, 0;%LS03
             0, 0, 1;%LS05
@@ -51,18 +52,21 @@ for s = 1:numel(subject)
     for i = 1:sessions        
         %load mat file
         if strcmpi(atlas, 'Seitzman300')
-            load([data_dir '/sub-' subject{s} '/sub-' subject{s} '_sess-' num2str(i) '_task-rest_corrmat_Seitzman300.mat'])
+            dat = load([data_dir '/sub-' subject{s} '/sub-' subject{s} '_sess-' num2str(i) '_task-rest_corrmat_Seitzman300.mat']);
+            data = dat.sess_roi_timeseries_concat;
+            data = data(atlas_params.sorti',:);
             %apply tmask
-            masked_data = sess_roi_timeseries_concat(:,logical(tmask_concat'));
+            masked_data = dat.sess_roi_timeseries_concat(:,logical(dat.tmask_concat'));
         elseif strcmpi(atlas, 'Parcels333')
-            load([data_dir '/sub-' subject{s} '_rest_ses-' num2str(i) '_parcel_timecourse.mat'])
-            data = parcel_time';
-            clear parcel_time
-            masked_data = data(:,logical(tmask_concat));
+            dat = load([data_dir '/sub-' subject{s} '_rest_ses-' num2str(i) '_parcel_timecourse.mat']);
+            data = dat.parcel_time';
+            data = data(atlas_params.sorti,:);
+            masked_data = data(:,logical(dat.tmask_concat));            
             %concatenate data
-        end
+        end        
         catData = [catData masked_data];
-        catTmask = [catTmask tmask_concat];
+        %catTmask = [catTmask dat.tmask_concat];
+        clear dat
     end    
     %I think this should be 10,816
     disp(sprintf('Total number of sample points for subject %s is %d by %d...', subject{s}, size(catData,1), size(catData,2)))
@@ -171,7 +175,7 @@ end
 %mean_diff_all = [0.451054915	0.31958749	0.250078328	0.205589374	0.173270193	0.149834654	0.130898036	0.116096011	0.103579279	0.09357542	0.085252215	0.077510628	0.071893195	0.067765274	0.063014982	0.0609474	0.057319998	0.055589204	0.053587631	0.051688755	0.049855826	0.049189074	0.047716066	0.047485058	0.046371319	0.046092851	0.045026644	0.049051036	0.048147125	0.04798667	0.047803287	0.048079218	0.047927852	0.047976362	0.048676489	0.048785449	0.048605224	0.048932758	0.049221036	0.049052662	0.049501161	0.049540971	0.049734258	0.04993298	0.050447245	0.050401381	0.0504621	0.050506165	0.048969311	0.042753616	0.042789566	0.043138017	0.043480223	0.026972895];
 plot(times_all(1,1:40),mean_of_means(1:40), ':', 'Color', [0,0,0], 'LineWidth',3)
 
-axis([0 100 0 .6])
+%axis([0 100 0 .6])
 ylabel('% Difference');
 xlabel('Time (Minutes)');
 m = findobj(gca,'Type','line');
@@ -202,7 +206,7 @@ end
 
 %means = [0.228121374	0.282854956	0.311825923	0.330394855	0.344075468	0.3540615	0.362085299	0.368580906	0.374353669	0.378886496	0.38303392	0.386997298	0.39018919	0.392779018	0.395671349	0.3921087	0.394652817	0.396349383	0.398223	0.39998822	0.401678269	0.402921549	0.404130596	0.405287927	0.406779144	0.407857626	0.408819803	0.40779906	0.4087539	0.409494202	0.41042813	0.411371703	0.4121878	0.412706817	0.413360333	0.414032785	0.41465492	0.419794232	0.420634614	0.420983464	0.421506702	0.421954376	0.422355276	0.42278862	0.423175282	0.42350195	0.423740618	0.42402081	0.434813233	0.42669529	0.42691267	0.42712188	0.42740375];
 plot(times_all(1,1:40),mean_of_means_SI(1:40), ':', 'Color', [0,0,0], 'LineWidth',3)
-axis([0 100 0.1 .5])
+%axis([0 100 0.1 .5])
 ylabel('Segregation Index');
 xlabel('Time (Minutes)');
 m = findobj(gca,'Type','line');
@@ -239,7 +243,7 @@ end
 
 %means = [0.228121374	0.282854956	0.311825923	0.330394855	0.344075468	0.3540615	0.362085299	0.368580906	0.374353669	0.378886496	0.38303392	0.386997298	0.39018919	0.392779018	0.395671349	0.3921087	0.394652817	0.396349383	0.398223	0.39998822	0.401678269	0.402921549	0.404130596	0.405287927	0.406779144	0.407857626	0.408819803	0.40779906	0.4087539	0.409494202	0.41042813	0.411371703	0.4121878	0.412706817	0.413360333	0.414032785	0.41465492	0.419794232	0.420634614	0.420983464	0.421506702	0.421954376	0.422355276	0.42278862	0.423175282	0.42350195	0.423740618	0.42402081	0.434813233	0.42669529	0.42691267	0.42712188	0.42740375];
 plot(times_all(1,1:40),mean_of_means_bFC(1:40), ':', 'Color', [0,0,0], 'LineWidth',3)
-axis([0 100 0 .2])
+%axis([0 100 0 .2])
 ylabel('Between FC');
 xlabel('Time (Minutes)');
 
@@ -271,7 +275,7 @@ end
 
 %means = [0.228121374	0.282854956	0.311825923	0.330394855	0.344075468	0.3540615	0.362085299	0.368580906	0.374353669	0.378886496	0.38303392	0.386997298	0.39018919	0.392779018	0.395671349	0.3921087	0.394652817	0.396349383	0.398223	0.39998822	0.401678269	0.402921549	0.404130596	0.405287927	0.406779144	0.407857626	0.408819803	0.40779906	0.4087539	0.409494202	0.41042813	0.411371703	0.4121878	0.412706817	0.413360333	0.414032785	0.41465492	0.419794232	0.420634614	0.420983464	0.421506702	0.421954376	0.422355276	0.42278862	0.423175282	0.42350195	0.423740618	0.42402081	0.434813233	0.42669529	0.42691267	0.42712188	0.42740375];
 plot(times_all(1,1:40),mean_of_means_wFC(1:40), ':', 'Color', [0,0,0], 'LineWidth',3)
-axis([0 100 0.09 .3])
+%axis([0 100 0.09 .3])
 ylabel('Within FC');
 xlabel('Time (Minutes)');
 m = findobj(gca,'Type','line');
@@ -309,10 +313,6 @@ end
             within(within<0) = [];
         elseif strcmpi(neg_corrs, 'zero')
             within(within<0) = 0;
-        elseif strcmpi(neg_corrs, 'asis')
-            continue;
-        else
-            error('Invalid method for dealing with negative correlations: please specify whether negative correlations should be made to equal to zero, deleted, or left alone.');
         end
         all_within = [all_within; within];
         %all_within(net,ses) = all_within;
@@ -325,10 +325,6 @@ end
             between(between<0) = [];
         elseif strcmpi(neg_corrs, 'zero')
             between(between<0) = 0;
-        elseif strcmpi(neg_corrs, 'asis')
-            continue;
-        else
-            error('Invalid method for dealing with negative correlations: please specify whether negative correlations should be made to equal to zero, deleted, or left alone.');
         end
         all_between = [all_between;between];
 
@@ -338,4 +334,5 @@ end
         between_FC = mean(all_between);
         within_FC = mean(all_within);
         seg_index = (within_FC - between_FC)/within_FC;  
+end
 end
