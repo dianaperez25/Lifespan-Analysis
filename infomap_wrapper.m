@@ -8,7 +8,7 @@ for sub = 1:numel(subject)
 outdir = ['/scratch/dcr8536/infomap/sub-' subject{sub} '/'];
 
 % dmat
-dmat_fname = ['/scratch/dcr8536/distances/sub-' subject{sub} '_vertices_distmat.mat'];
+dmat_fname = ['/scratch/dcr8536/distances/' subject{sub} '_vertices_distmat.mat'];
 dmat = smartload(dmat_fname);
 % rmat
 dconn_fname = ['/scratch/dcr8536/TimeB/Nifti/postFCproc_CIFTI/dconn_cifti_normalwall/Lifespan_Dconns/sub-' subject{sub} '_allsess_tmasked.dconn.nii'];
