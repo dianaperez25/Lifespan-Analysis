@@ -1,0 +1,6 @@
+## READ ME
+
+For infomap processing
+1. neet to make distance matrix that is subjects specific using the make_geo_sit_matrix script
+2. then use that distance matrix to run the infomap script using the infomap_wrapper script
+3. then run the post_infomap_proc script to make the actual network maps, though this script is not currently working too well :( 
