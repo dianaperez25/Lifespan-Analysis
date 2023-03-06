@@ -19,9 +19,10 @@ clear all
 % ------------------------------------------------------------------------
 %% PATHS
 % ------------------------------------------------------------------------
-%data_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Post-COVID/BIDS/derivatives/preproc_FCProc/corrmats_Seitzman300/';
+%data_dir = '/Volumes/RESEARCH_HD/Lifespan/CNS_analyses/FC_Parcels_333/';
+data_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Post-COVID/BIDS/derivatives/preproc_FCProc/corrmats_Seitzman300/';
 %data_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Segregation_analyses/iNetworks/Nifti/derivatives/preproc_FCProc/corrmats_Seitzman300/';
-data_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Post-COVID/BIDS/derivatives/postFCproc_CIFTI/FC_Parcels_333/';
+%data_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Post-COVID/BIDS/derivatives/postFCproc_CIFTI/FC_Parcels_333/';
 output_dir = '/Users/dianaperez/Desktop/Research/Segregation_Analyses/';
 if ~exist(output_dir)
     mkdir(output_dir)
@@ -31,9 +32,9 @@ atlas_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Atlases/';
 % ------------------------------------------------------------------------
 %% VARIABLES
 % ------------------------------------------------------------------------
-LS_subject = {'LS02', 'LS03', 'LS05', 'LS08', 'LS11', 'LS14', 'LS16','LS17'};
+LS_subject = {'LS02', 'LS03', 'LS05'};%, 'LS08', 'LS11', 'LS14', 'LS16','LS17'};
 iNet_subject = {'INET001','INET002', 'INET003','INET005','INET006','INET010','INET016','INET018','INET019','INET030'};
-LS_sessions = 5;
+LS_sessions = [3,5,5];
 iNet_sessions = 4;
 
 % ------------------------------------------------------------------------
@@ -99,7 +100,7 @@ for s = 1:numel(subject)
     all_within = [];
     all_between = [];
     %ses_SI = [];
-    for i = 1:sessions
+    for i = 1:sessions(s)
         if strcmpi(atlas, 'Seitzman300')
             load([data_dir '/sub-' subject{s} '/sub-' subject{s} '_sess-' num2str(i) '_task-rest_corrmat_Seitzman300.mat'])
             masked_data = sess_roi_timeseries_concat(:,logical(tmask_concat'));
@@ -120,7 +121,6 @@ for s = 1:numel(subject)
         matched_data_sorted = matched_data(atlas_params.sorti,:);
         matrix = paircorr_mod(matched_data_sorted');
         matrix = single(FisherTransform(matrix));% fisher transform r values
-        %sub_corrmat(ses,:,:,:) = matrix;
         count = 1;
         for net = 1:size(atlas_params.networks,ind)
             if net == 1

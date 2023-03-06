@@ -1,5 +1,5 @@
 %% Stability of Segregation Index
-% difference matrix
+
 output_dir = '/Users/dianaperez/Desktop/Segregation_Analyses/';
 if ~exist(output_dir)
     mkdir(output_dir)

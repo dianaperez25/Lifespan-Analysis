@@ -1,4 +1,3 @@
-%% This script plots segregation indices by session for Lifespan and iNet 
 
 clear all
 %% some paths
@@ -6,8 +5,8 @@ data_dir = '/Users/dianaperez/Desktop/Research/Segregation_Analyses/';
 output_dir = '/Users/dianaperez/Desktop/Research/Segregation_Analyses/';
 
 %% some options
-neg_corrs = 'asis'; % choose: 'nan', 'zero', 'asis'
-atlas = 'Seitzman300'; % 'Seitzman300' or 'Parcels333'
+neg_corrs = 'nan'; % choose: 'nan', 'zero', 'asis'
+atlas = 'Parcels333'; % 'Seitzman300' or 'Parcels333'
 
 %% some variables
 subs = {'LS02', 'LS03', 'LS05', 'LS08', 'LS11', 'LS14', 'LS16','LS17','INET001','INET002', 'INET003','INET005','INET006','INET010','INET016','INET018','INET019','INET030'};
@@ -65,17 +64,17 @@ end
 rgb_for_long = rgb_for_plot(:,1:3);
 %% First, plot Time A data
 % session 2+ data with unfilled circles
-handles = plotSpread(long_OA_subs', 'distributionMarkers', {'o'}, 'distributionColors', rgb_for_long', 'binWidth', .5);
+handles = plotSpread(long_OA_subs', 'distributionMarkers', {'o'}, 'distributionColors', rgb_for_long', 'binWidth', .5)
 hold on
 % session 1 data with a cross
-handles = plotSpread(first_ses_long_OA', 'distributionMarkers', {'+'}, 'distributionColors', rgb_for_long', 'xNames', subs);
+handles = plotSpread(first_ses_long_OA', 'distributionMarkers', {'+'}, 'distributionColors', rgb_for_long', 'xNames', subs)
 clear rgb_for_long
 hold on
 %% Then, plot Time B data with filled circles 
-handles = plotSpread_v2(all_subs, 'distributionMarkers', {'o'}, 'distributionColors', rgb_for_plot', 'xNames', subs, 'binWidth', 1);
+handles = plotSpread_v2(all_subs, 'distributionMarkers', {'o'}, 'distributionColors', rgb_for_plot', 'xNames', subs, 'binWidth', 1)
 hold on
 %% Then, plot session 1 data
-handles = plotSpread([first_ses_OA' first_ses_YA'], 'distributionMarkers', {'*'}, 'distributionColors', rgb_for_plot', 'xNames', subs);
+handles = plotSpread([first_ses_OA' first_ses_YA'], 'distributionMarkers', {'*'}, 'distributionColors', rgb_for_plot', 'xNames', subs)
 hold on
 %% Lastly, we are going to increase visibility of the circles
 % setting rgb colors to blue for light colors and white for dark colors
@@ -101,17 +100,14 @@ for n = 1:numel(subs)
     rgb_for_plot{n} = rgb_colors(n,:);
 end
 % then drawing unfilled circles around existing data points
-handles = plotSpread(all_subs, 'distributionMarkers', {'o'}, 'distributionColors', rgb_for_plot', 'xNames', subs, 'binWidth', 1);
+handles = plotSpread(all_subs, 'distributionMarkers', {'o'}, 'distributionColors', rgb_for_plot', 'xNames', subs, 'binWidth', 1)
 
 % some parameters for the plot
-axis([0 19 .25 .6]) % for the nan neg corrs seitzman300
-axis([0 19 .8 1.05]) % for the as is neg corrs parcels333
-axis([0 19 0.6 0.8]) % for the zero neg corrs parcels333
-axis([0 19 0.4 0.6]) % for the nan neg corrs parcels333
-axis([0 19 .5 .8]) % for the zero neg corrs seitzman300
-axis([0 19 .85 1.15]) % for the as is neg corrs seitzman300
+axis([0 19 .25 .6])
+axis([0 19 .8 1.05]) % for the as is neg corrs 
+ axis([0 19 0.6 0.8])
 ax = gca;
 ax.FontSize = 20;
 set(gcf, 'Units', 'Normalized', 'OuterPosition', [0.3, 0.3, 1, 0.7]);
 print(gcf, [output_dir 'SegInd_stability_negcorrs' neg_corrs '_' atlas '.jpg'], '-dpng', '-r300')
-close all                        
+                        
