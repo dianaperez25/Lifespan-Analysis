@@ -1,9 +1,9 @@
 % infomap_wrapper
-clear all
+%clear all
 addpath(genpath('/projects/b1081/Scripts/CIFTI_RELATED/Resources/'))
 addpath(genpath('/scratch/dcr8536/Lifespan-Analysis/'))
 subject = {'LS03', 'LS05', 'LS11'};
-thresholdarray = [0.003 0.004 0.005:0.005:0.05];
+thresholdarray = 0.05;%[0.003 0.004 0.005:0.005:0.05];
 for sub = 1:numel(subject)
 outdir = ['/scratch/dcr8536/infomap/sub-' subject{sub} '/'];
 
