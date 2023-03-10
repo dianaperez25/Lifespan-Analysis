@@ -3,7 +3,7 @@ function outmat = raw2colors_mat(regularRaw,colorChange)
 % regularRaw = regularized rawassn matrix from link Infomap
 % colorChange = matrix of color changes (formats is col 1 change to col 2)
 regularNodes = regularRaw;
-colorChange = colorChange';
+
 dataColor = regularNodes;
 for i=1:size(regularNodes,2)
     temp = dataColor(:,i);
