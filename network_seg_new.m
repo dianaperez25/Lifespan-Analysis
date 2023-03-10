@@ -21,21 +21,24 @@ clear all
 % ------------------------------------------------------------------------
 %% PATHS
 % ------------------------------------------------------------------------
-dataLoc = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Post-COVID/BIDS/derivatives/preproc_FCProc/corrmats_Seitzman300/';
+dataLoc = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Post-COVID/BIDS/derivatives/postFCproc_CIFTI/FC_Parcels_333/';
 atlas_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Atlases/';
-atlas = 'Seitzman300';
+atlas = 'Parcels333';
 atlas_params = atlas_parameters_GrattonLab(atlas,atlas_dir);% load atlas that contains roi info (including which rois belong to each network) 
 
 % ------------------------------------------------------------------------
 %% VARIABLES
 % ------------------------------------------------------------------------
-subs = {'LS02', 'LS03', 'LS05', 'LS08', 'LS11', 'LS14', 'LS16'};
-sessions = [5, 5, 5, 5, 5, 5, 5];
+subs = {'LS02', 'LS03', 'LS05', 'LS08', 'LS11', 'LS14', 'LS16', 'LS17'};
+sessions = [5, 5, 5, 5, 5, 5, 5, 5];
+num_nodes = 333;
 network_z.within = [];
 network_z.between = [];
 network_z.networks = atlas_params.networks{2:end}; %copy names of each network
 %network_z.networks{1} = [];
 seg_ind = [];
+within_corrs = [];
+between_corrs = [];
 
 
 % ------------------------------------------------------------------------
@@ -44,10 +47,11 @@ seg_ind = [];
 for sub = 1:numel(subs)
     for ses = 1:sessions(sub)
         %load correlation matrix file
-        fname = sprintf('%s/sub-%s/sub-%s_sess-%d_task-rest_corrmat_Seitzman300.mat', dataLoc, subs{sub}, subs{sub}, ses);
+        fname = sprintf('%s/sub-%s_rest_ses-%d_parcel_corrmat.mat', dataLoc, subs{sub}, ses);
+        %fname = sprintf('%s/sub-%s/sub-%s_sess-%d_task-rest_corrmat_Seitzman300.mat', dataLoc, subs{sub}, subs{sub}, ses);
         mat_struct = load(fname);
         %extracts only correlation matrix
-        matrix_orig = mat_struct.corrmat;
+        matrix_orig = mat_struct.parcel_corrmat;
         clear mat_struct
         % sort matrix into correct order (so that rois that belong to same system
         % are grouped together)
@@ -60,17 +64,17 @@ for sub = 1:numel(subs)
         % initialize some variables
         within = {}; %this will contain all the correlation values for the rois in each system, only for checking, will delete later
         between = {}; %this will contain all the correlation values for the rois outside of each system, only for checking, will delete later
-        node_within = zeros(300,1);
-        node_between = zeros(300,1);
-        node_seg_index = zeros(300,1);
+        node_within = zeros(num_nodes,1);
+        node_between = zeros(num_nodes,1);
+        node_seg_index = zeros(num_nodes,1);
         nodes_by_net = {};
         
         %num_networks = size(atlas_params.networks,1); % extract number of networks
-        for net = 2:size(atlas_params.networks,1) % go through each network
+        for net = 2:size(atlas_params.networks,2) % go through each network
             rois = atlas_params.mods{1,net}; %extract the rois belonging to system n
             %num_rois = length(rois); % number of rois in system n
             size_nets(net) = length(rois);
-            weights(net) = size_nets(net)/300;
+            weights(net) = size_nets(net)/num_nodes;
             %% GET WITHIN SYSTEM CORRELATIONS
             tmp = matrix(rois(1):rois(end),rois(1):rois(end)); % extract correlation values within system n
             %make a mask to only keep correlation values in upper triangle (because
@@ -98,7 +102,7 @@ for sub = 1:numel(subs)
             clear maskmat tmp % clear up some variables
             
             %% GET BETWEEN SYSTEM CORRELATIONS
-            tmp = matrix(rois(1):rois(end), 1:300); % extract z values for nth network
+            tmp = matrix(rois(1):rois(end), 1:num_nodes); % extract z values for nth network
             maskmat = ones(size(tmp)); % make another
             maskmat(:,rois(1):rois(end)) = 0; % mask out z values within system n
             between = tmp(maskmat==1); % put only between system z values in a variable

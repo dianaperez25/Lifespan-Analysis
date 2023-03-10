@@ -32,19 +32,19 @@ atlas_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Atlases/';
 % ------------------------------------------------------------------------
 %% VARIABLES
 % ------------------------------------------------------------------------
-LS_subject = {'LS02', 'LS03', 'LS05'};%, 'LS08', 'LS11', 'LS14', 'LS16','LS17'};
+LS_subject = {'LS02', 'LS03', 'LS05', 'LS08', 'LS11', 'LS14', 'LS16','LS17'};
 iNet_subject = {'INET001','INET002', 'INET003','INET005','INET006','INET010','INET016','INET018','INET019','INET030'};
-LS_sessions = [3,5,5];
-iNet_sessions = 4;
+LS_sessions = 1;
+iNet_sessions = 1;
 
 % ------------------------------------------------------------------------
 %% OPTIONS
 % ------------------------------------------------------------------------
-neg_corrs = 'asis'; % choose: 'nan', 'zero', 'asis'. How to deal with negative correlations
+neg_corrs = 'zero'; % choose: 'nan', 'zero', 'asis'. How to deal with negative correlations
 data_set = 'Lifespan'; %'Lifespan' or 'iNetworks' 
 atlas = 'Parcels333';
 match_data = 1; % if 1, will calculate the minimum possible amount of data available and will force all subs to have that amount of data
-amt_data = 968; % if this is commented out or set to 0, then the script will calculate it
+amt_data = 0; % if this is commented out or set to 0, then the script will calculate it
 
 atlas_params = atlas_parameters_GrattonLab(atlas,atlas_dir);% load atlas that contains roi info (including which rois belong to each network) 
 for net = 1:length(atlas_params.networks)
@@ -115,13 +115,23 @@ for s = 1:numel(subject)
         if match_data == 0 %if we don't care about matching data, then use the max amount of data available per subject/session
             amt_data = size(masked_data,2);
         end
-        matched_data = datasample(masked_data,amt_data,2,'Replace', false);
+        %datasample(masked_data,amt_data,2,'Replace', false);
         disp(sprintf('Total number of sample points for subject %s is %d by %d...', subject{s}, size(matched_data,1), size(matched_data,2)))
         % ... calculate the correlation matrix...
         matched_data_sorted = matched_data(atlas_params.sorti,:);
-        matrix = paircorr_mod(matched_data_sorted');
-        matrix = single(FisherTransform(matrix));% fisher transform r values
+        matched_data_1 = masked_data_sorted(1:amt_data);
+        matched_data_2 = masked_data_sorted(end-amt_data:end);
+        matrix_1 = paircorr_mod(matched_data_1');
+        matrix_1 = single(FisherTransform(matrix_1));% fisher transform r values
+        matrix_2 = paircorr_mod(matched_data_2');
+        matrix_2 = single(FisherTransform(matrix_2));
         count = 1;
+        for half = 1:2
+                if half == 1
+                    matrix = matrix_1;
+                elseif half = 2
+                    matrix = matrix_2;
+                end
         for net = 1:size(atlas_params.networks,ind)
             if net == 1
                 % we are ignoring ROI's labeled as 'Unassigned'
@@ -130,7 +140,7 @@ for s = 1:numel(subject)
                 continue;
             else
                 rois = [count:(count-1) + net_size(net)]; %extract the rois belonging to system n
-            end
+            end            
             tmp_within = matrix(rois,rois); % within-network correlations
             maskmat = ones(size(tmp_within));
             maskmat = logical(triu(maskmat,1));

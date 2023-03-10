@@ -155,12 +155,12 @@ string = ['running infomap...'];
 fprintf(string);
 if newinfomapversion
     if ~any(size(gcp('nocreate')))
-        parpool(numpools);
+%        parpool(numpools);
     end
 else
-    eval(['if ~matlabpool(''size''); matlabpool open ' num2str(numpools) '; end'])
+   % eval(['if ~matlabpool(''size''); matlabpool open ' num2str(numpools) '; end'])
 end
-parfor i=1:length(thresholdarray)
+for i=1:length(thresholdarray) % DP: replace with parfor after debugging
     pajekfile = [ outdir '/pajek_col' num2str(i) '.net' ];
     rawclrs = run_infomap_on_pajekfile(pajekfile,numreps);
     dlmwrite([outdir '/rawassn_col' num2str(i) '.txt'],rawclrs,'\t')

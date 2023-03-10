@@ -181,7 +181,7 @@ edgemetric(isnan(edgemetric)) = 0;
 label = zeros(size(minimametric));
 labelnum = nnz(minimametric);
 labelpos = find(minimametric==1);
-[ign sortorder] = sort(edgemetric(labelpos));
+[~, sortorder] = sort(edgemetric(labelpos));
 for j = 1:labelnum;
     label(labelpos(j)) = sortorder(j);
 end

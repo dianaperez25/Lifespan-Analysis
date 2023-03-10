@@ -17,7 +17,9 @@ clear all
 data_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Segregation_analyses/iNetworks/Nifti/derivatives/preproc_FCProc/corrmats_Seitzman300/';
 %data_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Post-COVID/BIDS/derivatives/preproc_FCProc/corrmats_Seitzman300/';
 output_dir = '/Users/dianaperez/Desktop/';
-
+if ~exist(output_dir)
+    mkdir(output_dir)
+end
 %% VARIABLES
 LS_subject = {'LS02', 'LS03', 'LS05', 'LS08', 'LS11', 'LS14', 'LS16', 'LS17'};
 LS_sessions = 5;

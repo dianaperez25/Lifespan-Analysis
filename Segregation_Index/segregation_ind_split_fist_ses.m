@@ -20,9 +20,9 @@ clear all
 %% PATHS
 % ------------------------------------------------------------------------
 %data_dir = '/Volumes/RESEARCH_HD/Lifespan/CNS_analyses/FC_Parcels_333/';
-data_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Post-COVID/BIDS/derivatives/preproc_FCProc/corrmats_Seitzman300/';
+%data_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Post-COVID/BIDS/derivatives/preproc_FCProc/corrmats_Seitzman300/';
 %data_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Segregation_analyses/iNetworks/Nifti/derivatives/preproc_FCProc/corrmats_Seitzman300/';
-%data_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Post-COVID/BIDS/derivatives/postFCproc_CIFTI/FC_Parcels_333/';
+data_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Post-COVID/BIDS/derivatives/postFCproc_CIFTI/FC_Parcels_333/';
 output_dir = '/Users/dianaperez/Desktop/Research/Segregation_Analyses/';
 if ~exist(output_dir)
     mkdir(output_dir)
@@ -32,15 +32,15 @@ atlas_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Atlases/';
 % ------------------------------------------------------------------------
 %% VARIABLES
 % ------------------------------------------------------------------------
-LS_subject = {'LS02', 'LS03', 'LS05'};%, 'LS08', 'LS11', 'LS14', 'LS16','LS17'};
+LS_subject = {'LS02', 'LS03', 'LS05', 'LS08', 'LS11', 'LS14', 'LS16','LS17'};
 iNet_subject = {'INET001','INET002', 'INET003','INET005','INET006','INET010','INET016','INET018','INET019','INET030'};
-LS_sessions = [3,5,5];
-iNet_sessions = 4;
+LS_sessions = 1;
+iNet_sessions = 1;
 
 % ------------------------------------------------------------------------
 %% OPTIONS
 % ------------------------------------------------------------------------
-neg_corrs = 'asis'; % choose: 'nan', 'zero', 'asis'. How to deal with negative correlations
+neg_corrs = 'zero'; % choose: 'nan', 'zero', 'asis'. How to deal with negative correlations
 data_set = 'Lifespan'; %'Lifespan' or 'iNetworks' 
 atlas = 'Parcels333';
 match_data = 1; % if 1, will calculate the minimum possible amount of data available and will force all subs to have that amount of data
@@ -68,10 +68,10 @@ if match_data
             end
 
             for i = 1:LS_sessions
-                if strcmpi(data_type, 'vol')            
+                if strcmpi(atlas, 'Seitzman300')            
                     load([data_dir '/sub-' subject{s} '/sub-' subject{s} '_sess-' num2str(i) '_task-rest_corrmat_Seitzman300.mat'])
                     masked_data = sess_roi_timeseries_concat(:,logical(tmask_concat'));
-                elseif strcmpi(data_type, 'surf')
+                elseif strcmpi(atlas, 'Parcels333')
                     load([data_dir '/sub-' subject{s} '_rest_ses-' num2str(i) '_parcel_timecourse.mat'])
                     masked_data = parcel_time(logical(tmask_concat),:)';
                 end
@@ -100,7 +100,7 @@ for s = 1:numel(subject)
     all_within = [];
     all_between = [];
     %ses_SI = [];
-    for i = 1:sessions(s)
+    for i = 1:sessions
         if strcmpi(atlas, 'Seitzman300')
             load([data_dir '/sub-' subject{s} '/sub-' subject{s} '_sess-' num2str(i) '_task-rest_corrmat_Seitzman300.mat'])
             masked_data = sess_roi_timeseries_concat(:,logical(tmask_concat'));
@@ -115,13 +115,26 @@ for s = 1:numel(subject)
         if match_data == 0 %if we don't care about matching data, then use the max amount of data available per subject/session
             amt_data = size(masked_data,2);
         end
-        matched_data = datasample(masked_data,amt_data,2,'Replace', false);
-        disp(sprintf('Total number of sample points for subject %s is %d by %d...', subject{s}, size(matched_data,1), size(matched_data,2)))
+        %datasample(masked_data,amt_data,2,'Replace', false);
+        %disp(sprintf('Total number of sample points for subject %s is %d by %d...', subject{s}, size(matched_data_1,1), size(matched_data_1,2)))
         % ... calculate the correlation matrix...
-        matched_data_sorted = matched_data(atlas_params.sorti,:);
-        matrix = paircorr_mod(matched_data_sorted');
-        matrix = single(FisherTransform(matrix));% fisher transform r values
-        count = 1;
+        
+        amt_data = floor(amt_data/2);
+        matched_data_sorted = masked_data(atlas_params.sorti,:);
+        matched_data_1 = matched_data_sorted(:,1:amt_data);
+        matched_data_2 = matched_data_sorted(:,end-amt_data+1:end);
+        matrix_1 = paircorr_mod(matched_data_1');
+        matrix_1 = single(FisherTransform(matrix_1));% fisher transform r values
+        matrix_2 = paircorr_mod(matched_data_2');
+        matrix_2 = single(FisherTransform(matrix_2));
+        
+        for half = 1:2
+            count = 1;
+                if half == 1
+                    matrix = matrix_1;
+                elseif half == 2
+                    matrix = matrix_2;
+                end
         for net = 1:size(atlas_params.networks,ind)
             if net == 1
                 % we are ignoring ROI's labeled as 'Unassigned'
@@ -130,7 +143,7 @@ for s = 1:numel(subject)
                 continue;
             else
                 rois = [count:(count-1) + net_size(net)]; %extract the rois belonging to system n
-            end
+            end            
             tmp_within = matrix(rois,rois); % within-network correlations
             maskmat = ones(size(tmp_within));
             maskmat = logical(triu(maskmat,1));
@@ -157,8 +170,10 @@ for s = 1:numel(subject)
             count = count + net_size(net);
         end
             %% calculate the segregation index by network by session
-            ses_SI(s,i) = (mean(all_within) - mean(all_between))/mean(all_within);                      
+            ses_SI(s,half) = (mean(all_within) - mean(all_between))/mean(all_within); 
+        end
+        end
     end
-end
-save([output_dir data_set '_allsubs_seg_index_ses_negcorrs' neg_corrs '_' atlas '.mat'], 'ses_SI')
+
+save([output_dir data_set '_allsubs_seg_index_splitfirstses_negcorrs' neg_corrs '_' atlas '.mat'], 'ses_SI')
 

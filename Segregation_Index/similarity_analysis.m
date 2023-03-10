@@ -1,5 +1,9 @@
-% difference matrix
-outDir = '/Users/dianaperez/Desktop/Segregation_Analyses/';
+%% Stability of Segregation Index
+
+output_dir = '/Users/dianaperez/Desktop/Segregation_Analyses/';
+if ~exist(output_dir)
+    mkdir(output_dir)
+end
 load('/Users/dianaperez/Desktop/Segregation_Analyses/INET_allsubs_seg_index_ses.mat')
 diff_score = [];
 count = 1;
@@ -24,7 +28,7 @@ set(gca,'XTick',[3,8,13,18,23,28,33,38], 'YTick', [3,8,13,18,23,28,33,38], 'XTic
 axis square;
 colorbar;
 %title('Correlation Matrix Similarity');
-saveas(gcf,[outDir 'SimilarityMat_SegregationIndex.tiff'],'tiff');
+saveas(gcf,[output_dir 'SimilarityMat_SegregationIndex.tiff'],'tiff');
 
 % FT_matrix = FisherTransform(matrix);
 % figure('Position',[1 1 1000 800]);

@@ -26,18 +26,24 @@ iNet_subject = {'INET001','INET002', 'INET003','INET005','INET006','INET010','IN
 iNet_sessions = 4;
 
 %% OPTIONS
-data_set = 'Lifespan'; %'Lifespan' or 'iNetworks' 
+data_set = 'iNetworks'; %'Lifespan' or 'iNetworks' 
 atlas = 'Parcels333'; %Parcels333 for the Gordon surface parcellations or Seitzman300 for the volumetric ROI's
 match_data = 1; % if 1, will calculate the minimum possible amount of data available and will force all subs to have that amount of data
 amt_data = 968; % if this is commented out or set to 0, then the script will calculate it
 
 %% SEPARATION BY SYSTEMS
+% here we specify the indices for the systems that we want to designate to
+% each category
 SM_systems = [3, 9, 10, 11]; %3: visual, 8: motor hand, 9: motor mouth, 11: auditory
 control_systems = [8, 4, 5, 6, 7]; % 8: CON, 4: FPN, 5: DAN, 6: VAN, 7: Salience
 control_related = [8,4,5]; %CON, FPN, DAN
 memory_default = [6, 7, 2, 12, 13]; %VAN, Salience, DMN, PERN, RetroSpl
 
-system_divisions = {SM_systems, control_systems};
+% This structure contains the system categories that will be analyzed
+% (I made it this way so that we can look at two or three categories without
+% changing the script too much)
+system_divisions = {control_related, memory_default};
+output_str = {'controlRelated', 'memoryDefault'}; % output strings for each of the categories being analyzed
 
 % load atlas parameters
 atlas_params = atlas_parameters_GrattonLab(atlas,atlas_dir);
@@ -75,13 +81,6 @@ if match_data
 end
 
 %% SIMILARITY CALCULATIONS
-% sets the size of the matrix depending on the parcellation/ROI's used
-if strcmpi(atlas, 'Seitzman300') 
-    maskmat = ones(300);
-elseif strcmpi(atlas, 'Parcels333')
-    maskmat = ones(333);
-end
-maskmat = logical(triu(maskmat, 1));
 
 % sets number of subjects and sessions depending on the dataset being
 % analyzed
@@ -94,12 +93,14 @@ elseif strcmpi(data_set, 'iNetworks')
 end
 
 for sys = 1:numel(system_divisions)
-% main loop; starts analysis
+
     % get indices for parcels belonging to the systems of interest
     inds = [];
     for n = 1:numel(system_divisions{sys})
         inds = [inds; atlas_params.mods{system_divisions{sys}(n)}];
     end
+    
+    % main loop; starts analysis
     count = 1; 
     for s = 1:numel(subject)  
         for i = 1:sessions
@@ -117,12 +118,15 @@ for sys = 1:numel(system_divisions)
 
             % ... then sample the pre-defined amount of data from the timeseries data...
             matched_data = datasample(masked_data,amt_data,2,'Replace', false);
-            disp(sprintf('Total number of sample points for subject %s is %d by %d...', subject{s}, size(matched_data,1), size(matched_data,2)))
+            disp(sprintf('Total number of sample points for subject %s session %d is %d by %d...', subject{s}, i, size(matched_data,1), size(matched_data,2)))
             % ... calculate the correlation matrix...
-            system_indices = [
-            systems_of_interest = matched_data(
-            corrmat_matched_data = paircorr_mod(matched_data');
+            
+            systems_of_interest = matched_data(inds, :);
+            corrmat_matched_data = paircorr_mod(systems_of_interest');
             % ... make it linear and store it in a variable...
+            
+            maskmat = ones(size(corrmat_matched_data,1));
+            maskmat = logical(triu(maskmat, 1));
             matcheddata_corrlin(count,:) = single(FisherTransform(corrmat_matched_data(maskmat)));
             % ... then onto the next session.
             count = count + 1;
@@ -131,6 +135,7 @@ for sys = 1:numel(system_divisions)
 
 % then, calculate the correlation/similarity across all of those linear matrices
 simmat = corr(matcheddata_corrlin');
+clear matcheddata_corrlin
 
 %% MAKE FIGURE
 figure('Position',[1 1 1000 800]);
@@ -142,11 +147,11 @@ set(gca,'XTick',tick_marks(1:numel(subject))+(sessions/2), 'YTick', tick_marks(1
     subject, 'YTickLabel', subject);
 axis square;
 colorbar;
-title('Correlation Matrix Similarity');
+title(['Correlation Matrix Similarity - ' output_str{sys}]);
 if match_data
-    saveas(gcf,[output_dir data_set '_' atlas '_' system_divisions(sys) '_similarityMat_matchedData_' num2str(amt_data) '.tiff'],'tiff');
+    saveas(gcf,[output_dir data_set '_' atlas '_' output_str{sys} '_similarityMat_matchedData_' num2str(amt_data) '.tiff'],'tiff');
 else
-    saveas(gcf,[output_dir data_set '_' atlas '_' system_divisions(sys) '_similarityMat_unMatchedData.tiff'],'tiff');
+    saveas(gcf,[output_dir data_set '_' atlas '_' output_str{sys} '_similarityMat_unMatchedData.tiff'],'tiff');
 end
 close('all');
 
@@ -167,8 +172,8 @@ for s = 1:numel(subject)
     count = count+sessions;
 end
 
-disp(['The average similarity between subjects for ' system_divisions(sys) ' is ' mean(between)])
-disp(['The average similarity within subjects for ' system_divisions(sys) ' is ' mean(within)])
+disp(['The average similarity between subjects for ' output_str{sys} ' is ' num2str(mean(between))])
+disp(['The average similarity within subjects for ' output_str{sys} ' is ' num2str(mean(within))])
     
 end
 %% THE END
