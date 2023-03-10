@@ -1,7 +1,7 @@
 clear all
 addpath(genpath('/scratch/dcr8536/Lifespan-Analysis/'))
 subject = {'LS02', 'LS03', 'LS05', 'LS08', 'LS11', 'LS14', 'LS16', 'LS17'};%, 'INET001','INET002', 'INET003','INET005','INET006','INET010','INET016','INET018','INET019','INET030'};
-iterations = 1;
+iterations = 1000;
 % surface
 data_dir = '/scratch/dcr8536/TimeB/Nifti/postFCproc_CIFTI/FC_Parcels_333/';
 atlas = 'Parcels333';
