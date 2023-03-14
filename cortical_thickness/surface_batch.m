@@ -1,0 +1,3 @@
+addpath /projects/b1081/member_directories/aporter/Ariana_Captures/GrattonLab-General-Repo/FCProcess
+%make_fs_masks('114', '/projects/b1081/Longitudinal_Berkeley/Nifti/derivatives/preproc_fmriprep-20.2.0')
+PostFreeSurferPipeline_fsavg2fslr_long_GrattonLab('INET006post','/projects/b1081/Longitudinal_iNetworks/Nifti/derivatives/freesurfer-6.0.1/subjects','/projects/b1081/Longitudinal_iNetworks/Nifti/derivatives/preproc_fmriprep-20.2.0/fmriprep/sub-INET006post/anat/')
