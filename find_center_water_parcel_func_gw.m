@@ -1,4 +1,4 @@
-function [center_coords indpos] = find_center_water_parcel_func(waterfile,surfdir,outputfile,hems)
+function [center_coords indpos] = find_center_water_parcel_func(subject, waterfile,surfdir,outputfile,hems)
 %TOL
 
 HEMS = {'L';'R'};
@@ -12,7 +12,7 @@ end
 
 for hem = h
     clear indpos
-    sphere = gifti([surfdir '/Conte69.' HEMS{hem} '.sphere.32k_fs_LR.surf.gii']);
+    sphere = gifti([surfdir '/' subject '.' HEMS{hem} '.sphere.32k_fs_LR.surf.gii']);
 
     % CG - was in Tim's original script, btu seems unused?
     %[phi theta r] = cart2sph(sphere.vertices(:,1), sphere.vertices(:,2),sphere.vertices(:,3));
@@ -22,7 +22,7 @@ for hem = h
 
     %Mask watersheds  %% commented this out of the distance file because
     %the gifti I used does not have the medial wall
-    maskname = ['/gpfs/research/grattonlab/member_directories/gwulfekuhle/medial_wall.' HEMS{hem} '.32k_fs_LR.func.gii'];
+    maskname = ['/projects/b1081/Atlases/32k_ConteAtlas_v2/medial_wall.' HEMS{hem} '.32k_fs_LR.func.gii'];
     mask = gifti(maskname);
     mask = mask.cdata;
     water(logical(mask)) = 0;

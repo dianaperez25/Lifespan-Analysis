@@ -1,8 +1,7 @@
-outdir = '/gpfs/research/grattonlab/member_directories/gwulfekuhle/MSC_400/distances';
-%surfdir = '/data/cn4/laumannt/standard_mesh_atlases/Conte69_atlas.LR.32k_fs_LR_glasser/fsaverage_LR32k';
-surfdir = '/gpfs/research/grattonlab/Scripts/CIFTI_RELATED/Resources/Conte69_atlas-v2.LR.32k_fs_LR.wb';
+outdir = '/scratch/dcr8536/distances';
+surfdir = '/projects/b1081/Lifespan/Nifti/derivatives/freesurfer-6.0.1/FREESURFER_fs_LR/';
+wb_path = '/projects/b1081/Scripts/workbench2/bin_linux64/';
 
-%cifti_related/fsavg2fslr_scripts/global/templates/standard_mesh_atlases 
 
 % geodesic distance matrices
 load([surfdir '/geodesic_distance.L.32k_fs_LR.mat']);
@@ -10,14 +9,14 @@ load([surfdir '/geodesic_distance.R.32k_fs_LR.mat']);
 
 subjects = 1;
 
-for s = subjects
+for subs = subjects
     
     %subject = sprintf('MSC%02d',subjects(s));
     subject = 'MSC01';
     disp(subject);
     
-    orig_parceldir = ['/gpfs/research/grattonlab/member_directories/gwulfekuhle/MSC_400/'];
-    left_gii_file = [orig_parceldir subject '_400_L.func.gii']; %need to also make a .gii %scripts/cifti_related/resources/read_write_cifti_gifti_@gifti
+    orig_parceldir = ['/scratch/dcr8536/parcellations/'];
+    left_gii_file = [orig_parceldir 'sub-' subject '_400_L.func.gii']; %need to also make a .gii %scripts/cifti_related/resources/read_write_cifti_gifti_@gifti
     right_gii_file = [orig_parceldir subject '_400_R.func.gii'];
     
     
