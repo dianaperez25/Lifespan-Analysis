@@ -11,15 +11,13 @@ for s = 1:numel(subs)
     if ~exist(outputdir)
         mkdir(outputdir);
     end
-    if edgemap == 0
-        
+    if edgemap == 0        
         surface_parcellation_singlesub(['sub-' subs{s}], dconnfile, surfdir, 10, 0, outputdir);
     end
     edgeciftiname = [outputdir '/corrofcorr_allgrad_LR_subcort_smooth2.55_wateredge_avg.dtseries.nii'];
     filestem = ['sub-' subs{s} '_individual_parcels'];
     threshperc = .50;
     template = '/scratch/dcr8536/template.dtseries.nii';
-    parcel_creator_cifti(edgeciftiname,filestem,threshperc,template)
-    
+    parcel_creator_cifti(edgeciftiname,filestem,threshperc,template)    
 end
 
