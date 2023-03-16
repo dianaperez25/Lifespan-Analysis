@@ -1,0 +1,68 @@
+%topdir = '/projects/b1081/Lifespan/';
+topdir = '/scratch/dcr8536/TimeA/Nifti/';
+addpath(genpath('/projects/b1081/dependencies/'));
+task = 'rest';
+%subjects = 1:10;
+subjects = {'LS02', 'LS03', 'LS05'};%, 'LS08', 'LS11', 'LS14', 'LS16', 'LS17','INET001', 'INET002', 'INET003', 'INET005', 'INET006', 'INET010', 'INET016', 'INET018','INET019', 'INET030'};
+%session = 4;
+runs = [7,7,8,0,0;9,9,11,8,9;8,8,8,9,9];
+%runs = [7,8,9,9,9; 9,9,9,10,11; 9,7,8,8,9; 8,7,8,8,8; 8,8,8,10,10; 8,7,8,10,9; 8,8,7,10,8; 9,7,8,8,8;6,8,8,9,0;7,7,8,9,0;7,7,9,8,0;8,7,9,9,0;7,8,8,9,0;7,7,9,8,0; 8,7,8,9,0;6,9,7,9,0;8,7,9,9,0;4,7,7,9,0];
+%outputdir_top = [topdir '/TaskFC/FC_Parcels/'];
+outputdir = '/scratch/dcr8536/TimeA/Nifti/postFCproc_CIFTI/FC_Parcels_333/'; %change this and fcdir below as needed
+if ~exist(outputdir)
+    mkdir(outputdir);
+end
+
+%%%% And do the same thing for the rest
+
+task = 'rest'
+for s = 1:length(subjects)
+    if contains(subjects{s}, 'LS02')
+        session = 3;
+        topdir_rest = '/scratch/dcr8536/TimeA/Nifti/postFCproc_CIFTI/';
+        topdir_tmask = '/scratch/dcr8536/TimeA/Nifti/preproc_fmriprep-20.2.0/fmriprep/';
+    elseif contains(subjects{s}, 'LS')
+        session = 5;
+        topdir_rest = '/scratch/dcr8536/TimeA/Nifti/postFCproc_CIFTI/';
+        topdir_tmask = '/scratch/dcr8536/TimeA/Nifti/preproc_fmriprep-20.2.0/fmriprep/';
+    elseif contains(subjects{s}, 'INET')
+        session = 4;
+        topdir_rest = '/projects/b1081/iNetworks/Nifti/derivatives/postFCproc_CIFTI_20.2.0/';%/data/nil-bluearc/GMT/Laumann/MSC/';
+        topdir_tmask = '/projects/b1081/iNetworks/Nifti/derivatives/preproc_fmriprep-20.2.0/fmriprep/';
+    end
+    for ses = 1:session
+    subject = sprintf('sub-%s',subjects{s});
+    tdir_init = [topdir_rest subject '/ses-' num2str(ses) '/'];
+    tmask_concat = [];
+    timecourse = [];
+    for run = 1:runs(s,ses)
+        fcFile = sprintf('%s/cifti_timeseries_normalwall/%s_ses-%d_task-rest_run-%d_LR_surf_subcort_222_32k_fsLR_smooth2.55.dtseries.nii',tdir_init, subject, ses, run);
+        if exist(fcFile)
+            fc_data = ft_read_cifti_mod(fcFile);
+            timecourse = [timecourse fc_data.data];
+            tmaskFile = sprintf('%s/%s/ses-%d/func/FD_outputs/%s_ses-%d_task-rest_run-%d_desc-tmask_fFD.txt', topdir_tmask, subject, ses, subject, ses, run);
+            tmask{run} = table2array(readtable(tmaskFile));
+            tmask_concat = [tmask_concat tmask{run}'];
+        end
+    end
+    %Make parcel timecourses
+%     timecoursedir = [fcdir '/cifti_timeseries_normalwall_native_freesurf'];
+%     timestem = 'LR_surf_subcort_333_32k_fsLR_smooth2.55';
+    watershed_LR = '/projects/b1081/Atlases/Evan_parcellation/Parcels_LR.dtseries.nii';
+    %outputdir = [outputdir_top task]; %[topdir '/TaskFC/FC_Parcels/' task]; %[dir '/CIMT_MSC02'];
+    [parcel_time, parcel_corrmat] = make_watershed_parcel_timecourse_cifti_func_DP(subject, tmask_concat,timecourse,watershed_LR,outputdir);
+    save([outputdir '/' subject '_' task '_ses-' num2str(ses) '_parcel_timecourse.mat'],'parcel_time','tmask_concat')
+    %save([outputdir '/' subject '_parcel_timecourse_concat_masked.mat'],'parcel_time_concat')
+    save([outputdir '/' subject '_' task '_ses-' num2str(ses) '_parcel_corrmat.mat'],'parcel_corrmat')
+    
+    %Display correlation matrix
+    %parcel_correlmat_figmaker_cg(mean(parcel_corrmat,3),['/data/cn5/caterina/TaskConn_Methods/all_data/ParcelCommunities.txt'],[-0.4 1]);
+    atlas_params = atlas_parameters_GrattonLab('Parcels333', '/projects/b1081/Atlases/');
+    figure_corrmat_GrattonLab(parcel_corrmat, atlas_params,-1,1);
+    save_fig(gcf,[outputdir '/' subject '_' task '_ses-' num2str(ses) '_parcel_corrmat.png']);
+    %Display correlation matrix
+    %parcel_correlmat_figmaker_cg(parcel_corrmat_concat,['/data/cn5/caterina/TaskConn_Methods/all_data/ParcelCommunities.txt'],[-0.4 1]);
+    %save_fig(gcf,[outputdir '/' subject '_' task '_parcel_corrmat_concat.png']);
+    close('all');
+end
+end

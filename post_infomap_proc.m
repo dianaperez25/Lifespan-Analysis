@@ -1,7 +1,7 @@
 % post infomap proc
 addpath(genpath('/projects/b1081/Scripts/graphtools/'))
 minNetSize = 400;
-sub = 'LS03';
+sub = 'LS02';
 str = ['sub-' sub '_infomap'];
 cd(['/scratch/dcr8536/infomap/' sub '/'])
 simple = modify_clrfile('simplify','rawassn.txt',minNetSize); %makes a file called rawassn_minsizeX.txt

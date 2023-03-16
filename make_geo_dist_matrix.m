@@ -8,7 +8,7 @@ out_dir = '/scratch/dcr8536/distances/'; %where the output files will be stored
 wb_path = '/projects/b1081/Scripts/workbench2/bin_linux64/'; % path to wb_command, need this to make geo distance matrices
 surf_root = '/projects/b1081/Lifespan/Nifti/derivatives/freesurfer-6.0.1/FREESURFER_fs_LR/'; % path to the individualized surfaces
 parcels = 1; % set to 1 to make distance matrix for parcels
-parcel_dir = '/scratch/dcr8536/parcellations/subsample_100/';
+parcel_dir = '/scratch/dcr8536/parcellations/';
 cifti_tmp = '/scratch/dcr8536/template.dtseries.nii';
 gifti_tmp = '/projects/b1081/Atlases/32k_ConteAtlas_v2/medial_wall.L.32k_fs_LR.func.gii';
 %make output directory if it doesnt already exist
@@ -17,8 +17,8 @@ if ~exist(out_dir)
 end
 
 %% VARIABLES
-subject = {'LS02','LS03', 'LS05', 'LS11', 'LS14', 'LS16', 'LS17', 'LS08'};
-%parpool(6)
+subject = {'LS05', 'LS08', 'LS11', 'LS14', 'LS16', 'LS17'};
+
 for sub = 1:numel(subject)
     sub_ID = ['sub-' subject{sub}];
     disp(['Creating distance matrix for ' sub_ID]);
