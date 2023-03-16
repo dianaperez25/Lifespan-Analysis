@@ -8,19 +8,19 @@ session = 4;
 runs = 11;%[7,7,8,0,0;9,9,11,8,9;8,8,8,9,9];
 %runs = [7,8,9,9,9; 9,9,9,10,11; 9,7,8,8,9; 8,7,8,8,8; 8,8,8,10,10; 8,7,8,10,9; 8,8,7,10,8; 9,7,8,8,8;6,8,8,9,0;7,7,8,9,0;7,7,9,8,0;8,7,9,9,0;7,8,8,9,0;7,7,9,8,0; 8,7,8,9,0;6,9,7,9,0;8,7,9,9,0;4,7,7,9,0];
 %outputdir_top = [topdir '/TaskFC/FC_Parcels/'];
-outputdir = 'projects/b1081/member_directories/dperez/FC_Parcels_333/';%/scratch/dcr8536/TimeA/Nifti/postFCproc_CIFTI/FC_Parcels_333/'; %change this and fcdir below as needed
+outputdir = '/scratch/dcr8536/TimeA/Nifti/postFCproc_CIFTI/FC_Parcels_333/'; %change this and fcdir below as needed
 if ~exist(outputdir)
     mkdir(outputdir);
 end
 
 
 
-task = 'rest';
+task = 'rest'
 for s = 1:length(subjects)
     if contains(subjects{s}, 'LS02')
         session = 3;
-        topdir_rest = '/scratch/dcr8536/TimeA/Nifti/postFCproc_CIFTI/';
-        topdir_tmask = '/scratch/dcr8536/TimeA/Nifti/preproc_fmriprep-20.2.0/fmriprep/';
+        topdir_rest = '/projects/b1081/iNetworks/Nifti/derivatives/postFCproc_CIFTI_20.2.0/';%'/scratch/dcr8536/TimeA/Nifti/postFCproc_CIFTI/';
+        topdir_tmask = '/projects/b1081/iNetworks/Nifti/derivatives/postFCproc_CIFTI_20.2.0/';%'/scratch/dcr8536/TimeA/Nifti/preproc_fmriprep-20.2.0/fmriprep/';
     elseif contains(subjects{s}, 'LS')
         session = 5;
         topdir_rest = '/scratch/dcr8536/TimeA/Nifti/postFCproc_CIFTI/';
