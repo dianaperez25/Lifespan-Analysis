@@ -2,16 +2,16 @@
 % regularizes and conbines the output of infomap across different
 % thresholds into one map assigning different weights to smaller vs. larger
 % thresholds
-clear all
+
 %addpath(genpath('/projects/b1081/Scripts/graphtools/'))
 addpath(genpath('/Users/dianaperez/Documents/Dependencies/graphtools/'))
 %% CHANGE THIS
-data_type = 'vertices'; % parcels or vertices
-minNetSize = 400; %400 for vertices, 20 for parcels?
-sub = 'LS03';
+data_type = 'parcels'; % parcels or vertices
+minNetSize = 5; %400 for vertices, 20 for parcels?
+sub = 'LS02';
 str = ['sub-' sub '_infomap'];
 %cd(['/scratch/dcr8536/infomap/' sub '/parcels/'])
-cd(['/Users/dianaperez/Desktop/Lifespan_infomap/infomap/' sub '/'])
+cd(['/Users/dianaperez/Desktop/Lifespan_infomap/infomap/sub' sub]
 %template_fname = '/scratch/dcr8536/template.dtseries.nii';
 template_fname = '/Users/dianaperez/Desktop/template.dtseries.nii';
 
@@ -56,7 +56,7 @@ inds = unique(consen);
 colorChange(:,1) = inds;
 colorChange(:,2) = 0:length(inds)-1;
 outmat = raw2colors_mat(consen,colorChange);
-tmp.data = zeros(size(tmp.data));
+tmp.data = zeros(size(parcels.data));
 
 switch data_type
     case 'parcels'        
