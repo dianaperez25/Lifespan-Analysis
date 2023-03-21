@@ -1,14 +1,14 @@
 %topdir = '/projects/b1081/Lifespan/';
-topdir = '/projects/b1081/iNetworks/';%'/scratch/dcr8536/TimeA/Nifti/';
+topdir = '/scratch/dcr8536/iNetworks/';%'/projects/b1081/iNetworks/';
 addpath(genpath('/projects/b1081/dependencies/'));
-task = 'rest';
+
 %subjects = 1:10;
-subjects = {'INET026', 'INET034', 'INET035', 'INET036', 'INET039', 'INET040', 'INET041', 'INET042', 'INET044', 'INET045', 'INET044', 'INET050', 'INET051', 'INET057', 'INET058', 'INET060', 'INET062', 'INET063', 'INET065', 'INET067', 'INET068'};%{'LS02', 'LS03', 'LS05', 'LS08', 'LS11', 'LS14', 'LS16', 'LS17','INET001', 'INET002', 'INET003', 'INET005', 'INET006', 'INET010', 'INET016', 'INET018','INET019', 'INET030'};
+subjects = {'INET034', 'INET035', 'INET036', 'INET039', 'INET040', 'INET041', 'INET042', 'INET044', 'INET045', 'INET047', 'INET050', 'INET051', 'INET057', 'INET058', 'INET060', 'INET062', 'INET063', 'INET065', 'INET067', 'INET068'};%{'LS02', 'LS03', 'LS05', 'LS08', 'LS11', 'LS14', 'LS16', 'LS17','INET001', 'INET002', 'INET003', 'INET005', 'INET006', 'INET010', 'INET016', 'INET018','INET019', 'INET026','INET030'};
 session = 4;
 runs = 11;%[7,7,8,0,0;9,9,11,8,9;8,8,8,9,9];
 %runs = [7,8,9,9,9; 9,9,9,10,11; 9,7,8,8,9; 8,7,8,8,8; 8,8,8,10,10; 8,7,8,10,9; 8,8,7,10,8; 9,7,8,8,8;6,8,8,9,0;7,7,8,9,0;7,7,9,8,0;8,7,9,9,0;7,8,8,9,0;7,7,9,8,0; 8,7,8,9,0;6,9,7,9,0;8,7,9,9,0;4,7,7,9,0];
 %outputdir_top = [topdir '/TaskFC/FC_Parcels/'];
-outputdir = 'projects/b1081/member_directories/dperez/FC_Parcels_333/';%/scratch/dcr8536/TimeA/Nifti/postFCproc_CIFTI/FC_Parcels_333/'; %change this and fcdir below as needed
+outputdir = '/projects/b1081/member_directories/dperez/FC_Parcels_333/';%/scratch/dcr8536/TimeA/Nifti/postFCproc_CIFTI/FC_Parcels_333/'; %change this and fcdir below as needed
 if ~exist(outputdir)
     mkdir(outputdir);
 end
@@ -27,7 +27,7 @@ for s = 1:length(subjects)
         topdir_tmask = '/scratch/dcr8536/TimeA/Nifti/preproc_fmriprep-20.2.0/fmriprep/';
     elseif contains(subjects{s}, 'INET')
         session = 4;
-        topdir_rest = '/projects/b1081/iNetworks/Nifti/derivatives/postFCproc_CIFTI_20.2.0/';%/data/nil-bluearc/GMT/Laumann/MSC/';
+        topdir_rest = '/scratch/dcr8536/iNetworks/';%'/projects/b1081/iNetworks/Nifti/derivatives/postFCproc_CIFTI_20.2.0/';%/data/nil-bluearc/GMT/Laumann/MSC/';
         topdir_tmask = '/projects/b1081/iNetworks/Nifti/derivatives/preproc_fmriprep-20.2.0/fmriprep/';
     end
     for ses = 1:session
@@ -40,9 +40,13 @@ for s = 1:length(subjects)
         if exist(fcFile)
             fc_data = ft_read_cifti_mod(fcFile);
             timecourse = [timecourse fc_data.data];
-            tmaskFile = sprintf('%s/%s/ses-%d/func/FD_outputs/%s_ses-%d_task-rest_run-%d_desc-tmask_fFD.txt', topdir_tmask, subject, ses, subject, ses, run);
+            tmaskFile = sprintf('%s/%s/ses-%d/FD_outputs/%s_ses-%d_task-rest_run-%d_desc-tmask_fFD.txt', topdir_rest, subject, ses, subject, ses, run);
+            if exist(tmaskFile)
             tmask{run} = table2array(readtable(tmaskFile));
             tmask_concat = [tmask_concat tmask{run}'];
+            else 
+                disp([subject ' session ' num2str(ses) ' missing tmask data!!']);
+            end  
         end
     end
     %Make parcel timecourses
@@ -50,6 +54,10 @@ for s = 1:length(subjects)
 %     timestem = 'LR_surf_subcort_333_32k_fsLR_smooth2.55';
     watershed_LR = '/projects/b1081/Atlases/Evan_parcellation/Parcels_LR.dtseries.nii';
     %outputdir = [outputdir_top task]; %[topdir '/TaskFC/FC_Parcels/' task]; %[dir '/CIMT_MSC02'];
+    if isempty(timecourse)
+        disp(sprintf('%s does not have timeseries data; check the files!',  subject))
+        continue;
+    else
     [parcel_time, parcel_corrmat] = make_watershed_parcel_timecourse_cifti_func_DP(subject, tmask_concat,timecourse,watershed_LR,outputdir);
     save([outputdir '/' subject '_' task '_ses-' num2str(ses) '_parcel_timecourse.mat'],'parcel_time','tmask_concat')
     %save([outputdir '/' subject '_parcel_timecourse_concat_masked.mat'],'parcel_time_concat')
@@ -64,5 +72,6 @@ for s = 1:length(subjects)
     %parcel_correlmat_figmaker_cg(parcel_corrmat_concat,['/data/cn5/caterina/TaskConn_Methods/all_data/ParcelCommunities.txt'],[-0.4 1]);
     %save_fig(gcf,[outputdir '/' subject '_' task '_parcel_corrmat_concat.png']);
     close('all');
+    end
 end
 end

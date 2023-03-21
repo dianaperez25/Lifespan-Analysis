@@ -5,8 +5,8 @@
 
 addpath(genpath('/projects/b1081/Scripts/graphtools/'))
 %% CHANGE THIS
-data_type = 'parcels'; % parcels or vertices
-minNetSize = 5; %400 for vertices, 20 for parcels?
+data_type = 'parcels'; 
+minNetSize = 10; %400 for vertices, 20 for parcels?
 sub = 'LS02';
 str = ['sub-' sub '_infomap'];
 cd(['/scratch/dcr8536/infomap/' sub '/parcels/'])
@@ -25,8 +25,7 @@ infoassn = dlmread(['rawassn_minsize' num2str(minNetSize) '_regularized.txt']);
 %run conBensus
 conBensus(infoassn, str, [], thresholdarray*100, 'voxel', minNetSize)
 load([str '_conBensus_weighted_minsize' num2str(minNetSize) '.mat'])
-%load template and save output of conBensus
-tmp = ft_read_cifti_mod(template_fname);
+%load template and save output of conBensus;
 switch data_type
     case 'parcels'
         % load parcellation file:
@@ -38,14 +37,16 @@ switch data_type
         
         for parc = 1:length(unique_parcels)
             inds = find(parcels.data==unique_parcels(parc));
-            tmp.data(inds) = consen(parc);
+            tmp.data(inds) = outmat(parc);
         end
-        ft_write_cifti_mod([str '_conBensus_weighted_minsize' num2str(minNetSize) '_parcels.dtseries.nii'], tmp);
+        ft_write_cifti_mod([str '_conBensus_weighted_minsize' num2str(minNetSize) '_consecutive_individual_parcels.dtseries.nii'], tmp);
     case 'vertices'
-        tmp.data = consen;
-        ft_write_cifti_mod([str '_conBensus_weighted_minsize' num2str(minNetSize) '_vertices.dtseries.nii'], tmp);
+        tmp.data = outmat;
+        ft_write_cifti_mod([str '_conBensus_weighted_minsize' num2str(minNetSize) '_consecutive_individual_vertices.dtseries.nii'], tmp);
 end
-
+% tmp = ft_read_cifti_mod(template_fname);
+% tmp.data = consen;%(tmp.brainstructure>0);
+%ft_write_cifti_mod([str '_conBensus_weighted_minsize' num2str(minNetSize) '.dtseries.nii'], tmp)
 %re-label the networks so that they're all consecutive numbers
 colorChange = [];
 inds = unique(consen);
@@ -55,7 +56,14 @@ outmat = raw2colors_mat(consen,colorChange);
 tmp.data = zeros(size(parcels.data));
 
 switch data_type
-    case 'parcels'        
+    case 'parcels'
+        % load parcellation file:
+        parcels = ft_read_cifti_mod(['/scratch/dcr8536/parcellations/sub-' sub '/sub-' sub '_individual_parcels_edgethresh_0.5.dtseries.nii']);
+        unique_parcels = unique(parcels.data);
+        if unique_parcels(1) == 0 
+            unique_parcels(1) = [];
+        end
+        
         for parc = 1:length(unique_parcels)
             inds = find(parcels.data==unique_parcels(parc));
             tmp.data(inds) = outmat(parc);

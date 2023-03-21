@@ -19,7 +19,7 @@ dconn_fname = ['/scratch/dcr8536/parcellations/avg_timecourses/sub-' subject{sub
 %rmat = dconn.data(1:size(dmat,1), 1:size(dmat,1));
 dconn = load(dconn_fname);
 rmat = dconn.avg_parc_ts;
-rmat = paircorr_mod(rmat');
+rmat = p
 clear dconn
 
 cd('/scratch/dcr8536/GrattonLab-General-Repo/NetworkAnalysis')
