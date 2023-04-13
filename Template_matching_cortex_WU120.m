@@ -1,6 +1,5 @@
 function Template_matching_cortex_WU120(data_info, outDir)
 
-% 
 % Matches each vertex to a functional network by comparing the dice coeff.
 % of its thresholded seedmap to all network template seedmaps (from the
 % WashU 120), and assigns the vertex to the network with the highest match.
