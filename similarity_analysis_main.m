@@ -13,8 +13,8 @@ clear all
 %% ------------------------------------------------------------------------------------------------
 %% PATHS
 %data_dir = '/projects/b1081/Lifespan/derivatives/preproc_FCProc/corrmats_Seitzman300/';
-%data_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Post-COVID/BIDS/derivatives/postFCproc_CIFTI/FC_Parcels_333/';
-data_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Segregation_analyses/iNetworks/Nifti/derivatives/preproc_FCProc/corrmats_Seitzman300/';
+data_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Post-COVID/BIDS/derivatives/postFCproc_CIFTI/FC_Parcels_333/';
+%data_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Segregation_analyses/iNetworks/Nifti/derivatives/preproc_FCProc/corrmats_Seitzman300/';
 %data_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Post-COVID/BIDS/derivatives/preproc_FCProc/corrmats_Seitzman300/';
 output_dir = '/Users/dianaperez/Desktop/';
 if ~exist(output_dir)
@@ -27,14 +27,14 @@ iNet_subject = {'INET001','INET002', 'INET003','INET005','INET006','INET010','IN
 iNet_sessions = 4;
 
 %% OPTIONS
-data_type = 'vol'; %'vol' or 'surf' ; are the files for volume ROI's or parcels on the surface?
+data_type = 'surf'; %'vol' or 'surf' ; are the files for volume ROI's or parcels on the surface?
 data_set = 'iNetworks'; %'Lifespan' or 'iNetworks' 
-match_data = 0; % if 1, will calculate the minimum possible amount of data available and will force all subs to have that amount of data
+match_data = 1; % if 1, will calculate the minimum possible amount of data available and will force all subs to have that amount of data
 amt_data = 968; % if this is commented out or set to 0, then the script will calculate it
 
 %% DATA MATCHING
 if match_data
-    if ~exist(amt_data) || amt_data == 0
+    if amt_data == 0
         allSubs_amtData = [];
         % get minimum amt of data per session
         subject = [LS_subject iNet_subject];

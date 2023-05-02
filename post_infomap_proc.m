@@ -1,13 +1,14 @@
 %% post infomap proc
-% regularizes and conbines the output of infomap across different
+% regularizes and combines the output of infomap across different
 % thresholds into one map assigning different weights to smaller vs. larger
 % thresholds
 clear all
 %addpath(genpath('/projects/b1081/Scripts/graphtools/'))
 addpath(genpath('/Users/dianaperez/Documents/Dependencies/graphtools/'))
+
 %% CHANGE THIS
-data_type = 'vertices'; % parcels or vertices
-minNetSize = 400; %400 for vertices, 20 for parcels?
+data_type = 'parcels'; % parcels or vertices
+minNetSize = 20; %400 for vertices, 20 for parcels?
 sub = 'LS03';
 str = ['sub-' sub '_infomap'];
 %cd(['/scratch/dcr8536/infomap/' sub '/parcels/'])

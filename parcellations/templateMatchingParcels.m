@@ -1,24 +1,16 @@
-function templateMatchingVariants(paramsFile,outputdir)
-subject = 'LS02';
+function template_matching_parcels(subject)
+
+%subject = 'LS02';
 sessions = 5;
 runs = 13; % I think this is the max number of runs
 % some paths
 cifti_data_dir = '/projects/b1081/Lifespan/Nifti/derivatives/postFCproc_CIFTI/';
 tmask_dir = '/projects/b1081/Lifespan/Nifti/derivatives/preproc_fmriprep-20.2.0/fmriprep/';
-ind_parcels_dir = '/projects/b1081/Lifespan/Nifti/derivatives/postFCproc_CIFTI/indiv_parcels/';
-
+%ind_parcels_dir = '/projects/b1081/Lifespan/Nifti/derivatives/postFCproc_CIFTI/indiv_parcels/';
+ind_parcels_dir = '/scratch/dcr8536/Lifespan_KongParcellation/';
+output_dir = ['/scratch/dcr8536/parcellations/sub-' subject '/'];
 % load network templates
 load('/projects/b1081/Scripts/CIFTI_RELATED/Template_Matching/Templates_consensus.mat'); %WU-120 consensus templates
-count = 0;
-for i=1:length(IDNames)
-    if strcmp(IDNames{i},'skip')
-        continue;
-    else
-        count = count + 1;
-        tempIDNames{count} = IDNames{i};
-    end
-end
-IDNames = tempIDNames;
 
 templates = templates(1:59412,:)';
 template_values_sorted = sort(templates(:), 'descend');
@@ -27,13 +19,25 @@ threshtemplates= templates >= threshval;
 clear allTvals allTvals_sorted templates threshval
 
 % Set variables
-if ~exist('outputdir')
-    outputdir = pwd;
+if ~exist('output_dir')
+    output_dir = pwd;
 end
 
 % load individual parcellation file for subject
-ind_parcels_fname = sprintf('%s/sub-%s/sub-%s_individual_parcels_edgethresh_0.5.dtseries.nii', ind_parcels_dir, subject, subject);
+%ind_parcels_fname = sprintf('%s/sub-%s/sub-%s_individual_parcels_edgethresh_0.5.dtseries.nii', ind_parcels_dir, subject, subject);
+ind_parcels_fname = sprintf('%s/%s_cMSHBM.dtseries.nii', ind_parcels_dir, subject);
 ind_parcels = ft_read_cifti_mod(ind_parcels_fname);
+unique_parcels = unique(ind_parcels.data);
+if unique_parcels(1) == 0
+    unique_parcels(1) = [];
+end
+
+parcel_corrmap_fname = [output_dir 'sub-' subject '_corrmap_by_parcel_KONG.mat'];
+output_fname = sprintf('%s/sub-%s_corr_parcel_by_template_binarized_KONG.mat', output_dir, subject);
+
+if exist(parcel_corrmap_fname)
+    load(parcel_corrmap_fname)
+else
 %initialize some variables
 cifti_ts_concat = []; tmask_concat = [];
 for ses = 1:sessions
@@ -44,39 +48,50 @@ for ses = 1:sessions
         if exist(cifti_ts_fname)
             cifti_ts = ft_read_cifti_mod(cifti_ts_fname);
             tmask = table2array(readtable(tmask_fname));
-            cifti_ts_concat = [cifti_ts_concat cifti_ts];
-            tmask_concat = [tmask_concat tmask];
+            cifti_ts_concat = [cifti_ts_concat cifti_ts.data];
+            tmask_concat = [tmask_concat tmask'];
         end 
     end
 end
 
-masked_data = cifti_ts_concat(:,logical(tmask_concat'));
-unique_parcels = unique(ind_parcels.data);
-if unique_parcels(1) == 0;
-    unique_parcels(1) = [];
-end
-    % Loop through each variant and calculate its connectivity map
+masked_data = cifti_ts_concat(1:59412,logical(tmask_concat));
+
+    % Loop through each parcel and calculate its connectivity map
     for ind=1:length(unique_parcels)
-        parcel_verts = logical(ind_parcels.data==unique_parcels(ind));
+        parcel_verts = find(ind_parcels.data==unique_parcels(ind));
         corr_map = paircorr_mod(mean(masked_data(parcel_verts,:))',masked_data'); 
         corr_map(isnan(corr_map)) = 0;
         corr_map_parcel(:,ind) = corr_map';
         clear corr_map
     end
     clear masked_data
-    
+    save(parcel_corrmap_fname, 'corr_map_parcel', '-v7.3');
+end
     
     % Match each variant's connectivity map to each template connectivity map
     disp('Matching to templates and computing goodness of fit')
-    corr_coeff = zeros(length(unique_parcels),size(threshtemplates,2));
-    %% threshtemplates here is supposed to have the number of templates
+    corr_coeff = zeros(length(unique_parcels),size(threshtemplates,1));
+    
+    corrmap_linear = corr_map_parcel(:);
+    sorted_vals = sort(corrmap_linear, 'descend');
+    subject_thresh = sorted_vals(round(0.05 * numel(sorted_vals)));
+    corr_mat_thresh = corr_map_parcel >= subject_thresh;
     for parcel=1:length(unique_parcels)
         disp(['Subject ' subject ', parcel #' num2str(parcel) ' out of ' num2str(length(unique_parcels))]);
-        for templatenum = 1:size(threshtemplates,2); %% this isn't doing dice correlation, is it? It's just straight up correlation....
-            corr_coeff(parcel,templatenum) = paircorr_mod(corr_map_parcel(:,parcel),threshtemplates(:,templatenum));
+        for templatenum = 1:size(threshtemplates,1) %% this isn't doing dice correlation, is it? It's just straight up correlation....
+            corr_coeff(parcel,templatenum) = paircorr_mod(corr_mat_thresh(:,parcel),threshtemplates(templatenum,:)');
         end
     end
     
+%     for parcel=1:length(unique_parcels)
+%         disp(['Subject ' subject ', parcel #' num2str(parcel) ' out of ' num2str(length(unique_parcels))]);
+%         sorted_vals = sort(corr_map_parcel(:,parcel), 'descend');
+%         subject_thresh = sorted_vals(round(0.05 * numel(sorted_vals)));
+%         corr_mat_thresh = corr_map_parcel(:,parcel) >= subject_thresh;
+%         for templatenum = 1:size(threshtemplates,1) %% this isn't doing dice correlation, is it? It's just straight up correlation....
+%             corr_coeff(parcel,templatenum) = paircorr_mod(corr_mat_thresh,threshtemplates(templatenum,:)');
+%         end
+%     end
     
     % Determine the 1st and 2nd place template network (max and next max match)
     corr_coeff(isnan(corr_coeff)) = 0;
@@ -89,134 +104,27 @@ end
     clear tempCorrCoeff
     
     
-    % Save the correlation between each parcel and each template network
-    % (between their connectivity maps)
-    for parcel=1:length(unique_parcels)
-        parcel_verts = logical(ind_parcels.data==unique_parcels(parcel));
-        corrVals = corr_coeff(parcel,:);
-        networkIDs(parcel_verts,count) = IDs(maxi(parcel));
-        networkRatio(parcel_verts,count) = corr_coeff(parcel,maxi(parcel))./corr_coeff(parcel,nextMax(parcel));
-        for kk=1:size(ThreshTemplates,2)
-            networkPercent(parcel_verts,kk,count)=corrVals(kk);
-        end
-    end
-    clear maxi corr_coeff nextMax corrVals
+% Save the correlation between each parcel and each template network
+% (between their connectivity maps)
+save(output_fname, 'corr_coeff', 'maxi', 'nextMax', '-v7.3');
+
+%now make a cifti network map
+%load a template
+template_fname = '/projects/b1081/member_directories/dperez/template.dtseries.nii';
+template = ft_read_cifti_mod(template_fname);
+
+%loop through each parcel and label its vertices with the right network
+% but first, adjust indices to add the "nothing" networks
+color_change = [1:14; 1:3, 5, 7:16];
+parcel_net_assign = raw2colors_mat(maxi,color_change');
+network_map = zeros(size(template.data));
+for ind=1:length(unique_parcels)
+    parcel_verts = find(ind_parcels.data==unique_parcels(ind));
+    network_map(parcel_verts) = parcel_net_assign(ind);
 end
+template.data = network_map;
 
-
-% Write out the results
-out_template.data = zeros(ncortverts,count);
-
-out_template.data(1:size(networkIDs,1),:) = networkIDs;
-ft_write_cifti_mod([outputdir '/variantTemplatematch_allSubjects_networkIDs'],out_template);
-clear networkIDs
-
-out_template.data(1:size(networkRatio,1),:) = networkRatio;
-ft_write_cifti_mod([outputdir '/variantTemplatematch_allSubjects_ratioOfTopTwoTemplates'],out_template);
-clear networkRatio
-
-for kk = 1:size(ThreshTemplates,2)
-    out_template.data(1:size(networkPercent,1),:) = squeeze(networkPercent(:,kk,:));
-    ft_write_cifti_mod([outputdir '/variantTemplatematch_allSubjects_corrCoeffFor' IDNames{kk}],out_template);
-end
-
-end
-
-function [pathstr, name, ext] = fileparts(file)
-%FILEPARTS Filename parts.
-%   [PATHSTR,NAME,EXT] = FILEPARTS(FILE) returns the path, file name, and
-%   file name extension for the specified FILE. The FILE input is a string
-%   containing the name of a file or folder, and can include a path and
-%   file name extension. The function interprets all characters following
-%   the right-most path delimiter as a file name plus extension.
-%
-%   If the FILE input consists of a folder name only, be sure that the
-%   right-most character is a path delimiter (/ or \). Othewise, FILEPARTS
-%   parses the trailing portion of FILE as the name of a file and returns
-%   it in NAME instead of in PATHSTR.
-%
-%   FILEPARTS only parses file names. It does not verify that the file or
-%   folder exists. You can reconstruct the file from the parts using
-%      fullfile(pathstr,[name ext])
-%
-%   FILEPARTS is platform dependent.
-%
-%   On Microsoft Windows systems, you can use either forward (/) or back
-%   (\) slashes as path delimiters, even within the same string. On Unix
-%   and Macintosh systems, use only / as a delimiter.
-%
-%   See also FULLFILE, PATHSEP, FILESEP.
-
-%   Copyright 1984-2012 The MathWorks, Inc.
-%   $Revision: 1.18.4.18 $ $Date: 2012/04/14 04:15:41 $
-
-pathstr = '';
-name = '';
-ext = '';
-
-if ~ischar(file)
-    error(message('MATLAB:fileparts:MustBeChar'));
-elseif isempty(file) % isrow('') returns false, do this check first
-    return;
-elseif ~isrow(file)
-    error(message('MATLAB:fileparts:MustBeChar'));
-end
-
-if ispc
-    ind = find(file == '/'|file == '\', 1, 'last');
-    if isempty(ind)
-        ind = find(file == ':', 1, 'last');
-        if ~isempty(ind)       
-            pathstr = file(1:ind);
-        end
-    else
-        if ind == 2 && (file(1) == '\' || file(1) == '/')
-            %special case for UNC server
-            pathstr =  file;
-            ind = length(file);
-        else 
-            pathstr = file(1:ind-1);
-        end
-    end
-    if isempty(ind)       
-        name = file;
-    else
-        if ~isempty(pathstr) && pathstr(end)==':' && ...
-                (length(pathstr)>2 || (length(file) >=3 && file(3) == '\'))
-                %don't append to D: like which is volume path on windows
-            pathstr = [pathstr '\'];
-        elseif isempty(deblank(pathstr))
-            pathstr = '\';
-        end
-        name = file(ind+1:end);
-    end
-else    % UNIX
-    ind = find(file == '/', 1, 'last');
-    if isempty(ind)
-        name = file;
-    else
-        pathstr = file(1:ind-1); 
-
-        % Do not forget to add filesep when in the root filesystem
-        if isempty(deblank(pathstr))
-            pathstr = '/';
-        end
-        name = file(ind+1:end);
-    end
-end
-
-if isempty(name)
-    return;
-end
-
-% Look for EXTENSION part
-ind = find(name == '.', 1, 'last');
-
-if isempty(ind)
-    return;
-else
-    ext = name(ind:end);
-    name(ind:end) = [];
-end
-
+netmap_fname = sprintf('%s/sub-%s_indiv_parcels_net_assigned_binarized_KONG.dtseries.nii', output_dir, subject);
+ft_write_cifti_mod(netmap_fname, template)
+clear maxi corr_coeff nextMax 
 end

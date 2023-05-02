@@ -26,7 +26,7 @@ iNet_subject = {'INET001','INET002', 'INET003','INET005','INET006','INET010','IN
 iNet_sessions = 4;
 
 %% OPTIONS
-data_set = 'iNetworks'; %'Lifespan' or 'iNetworks' 
+data_set = 'Lifespan'; %'Lifespan' or 'iNetworks' 
 atlas = 'Parcels333'; %Parcels333 for the Gordon surface parcellations or Seitzman300 for the volumetric ROI's
 match_data = 1; % if 1, will calculate the minimum possible amount of data available and will force all subs to have that amount of data
 amt_data = 968; % if this is commented out or set to 0, then the script will calculate it
@@ -42,8 +42,8 @@ memory_default = [6, 7, 2, 12, 13]; %VAN, Salience, DMN, PERN, RetroSpl
 % This structure contains the system categories that will be analyzed
 % (I made it this way so that we can look at two or three categories without
 % changing the script too much)
-system_divisions = {control_related, memory_default};
-output_str = {'controlRelated', 'memoryDefault'}; % output strings for each of the categories being analyzed
+system_divisions = {SM_systems};
+output_str = {'sensorimotor'}; % output strings for each of the categories being analyzed
 
 % load atlas parameters
 atlas_params = atlas_parameters_GrattonLab(atlas,atlas_dir);

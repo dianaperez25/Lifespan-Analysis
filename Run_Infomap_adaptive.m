@@ -120,7 +120,7 @@ for t = 1:length(thresholdarray)
     num_top_bythresh(t) = ceil(num_nodes .* thresholdarray(t));
 end
 
-
+%% this seems to threshold row by row
 for i = 1:num_nodes
     if any(rmat(:,i))
         [~,sortinds] = sort(rmat(:,i),'descend');
