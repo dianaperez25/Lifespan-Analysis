@@ -26,12 +26,12 @@ workbenchdir = '/projects/b1081/Scripts/workbench2/bin_linux64/';
 HEMS = {'L','R'};
 for hem = 1:2
 
-    midsurf = [surfdir '/sub-' subject '/MNI/Native/sub-' subject '.' HEMS{hem} '.midthickness.native.surf.gii'];
-    midsurf_LR32k = [surfdir '/sub-' subject '/MNI/fsaverage_LR32k/sub-' subject '.' HEMS{hem} '.midthickness.32k_fs_LRtesting1.surf.gii'];
-    whitesurf = [surfdir '/sub-' subject '/MNI/Native/sub-' subject '.' HEMS{hem} '.white.native.surf.gii'];
-    pialsurf = [surfdir '/sub-' subject '/MNI/Native/sub-' subject '.' HEMS{hem} '.pial.native.surf.gii'];
-    nativedefsphere = [surfdir '/sub-' subject '/MNI/Native/sub-' subject '.' HEMS{hem} '.sphere.reg.reg_LR.native.surf.gii'];
-    outsphere = [surfdir '/sub-' subject '/MNI/fsaverage_LR32k/sub-' subject '.' HEMS{hem} '.sphere.32k_fs_LR.surf.gii'];
+    midsurf = [surfdir '/sub-' subject '/NativeVol/Native/sub-' subject '.' HEMS{hem} '.midthickness.native.surf.gii'];
+    midsurf_LR32k = [surfdir '/sub-' subject '/NativeVol/fsaverage_LR32k/sub-' subject '.' HEMS{hem} '.midthickness.32k_fs_LR.surf.gii'];
+    whitesurf = [surfdir '/sub-' subject '/NativeVol/Native/sub-' subject '.' HEMS{hem} '.white.native.surf.gii'];
+    pialsurf = [surfdir '/sub-' subject '/NativeVol/Native/sub-' subject '.' HEMS{hem} '.pial.native.surf.gii'];
+    nativedefsphere = [surfdir '/sub-' subject '/NativeVol/Native/sub-' subject '.' HEMS{hem} '.sphere.reg.reg_LR.native.surf.gii'];
+    outsphere = [surfdir '/sub-' subject '/NativeVol/fsaverage_LR32k/sub-' subject '.' HEMS{hem} '.sphere.32k_fs_LR.surf.gii'];
 
     system([workbenchdir '/wb_command -volume-to-surface-mapping ' volfile '.nii.gz ' midsurf ' ' volfile '_' HEMS{hem} '.func.gii -ribbon-constrained ' whitesurf ' ' pialsurf ' -volume-roi ' goodvoxmask]);
     system([workbenchdir '/wb_command -metric-dilate ' volfile '_' HEMS{hem} '.func.gii ' midsurf ' 10 ' volfile '_' HEMS{hem} '_dil10.func.gii']);
