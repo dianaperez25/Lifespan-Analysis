@@ -29,7 +29,7 @@ num_nets = length(atlas_params.networks);
 for net = 1:num_nets
     net_size(net) = length(atlas_params.mods{1, net});
 end
-num_rois = 333;
+num_rois = atlas_params.num_rois;
 weights = net_size./(num_rois-net_size(1));
 % ------------------------------------------------------------------------
 %% VARIABLES

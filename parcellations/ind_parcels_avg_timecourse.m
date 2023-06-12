@@ -1,9 +1,10 @@
 %% Script to make average timecourse for parcels
 clear all
 addpath(genpath('/projects/b1081/Scripts/Resources/'))
+addpath(genpath('/Users/dianaperez/Desktop/Dependencies'))
 
 % PATHS
-ind_parc_loc = '/scratch/dcr8536/parcellations/subsample_10/';
+ind_parc_loc =  '/scratch/dcr8536/parcellations/subsample_10/';
 surf_ts_loc = '/scratch/dcr8536/TimeB/Nifti/postFCproc_CIFTI/';
 output_dir = '/scratch/dcr8536/parcellations/avg_timecourses/';
 tmask_loc = '/scratch/dcr8536/TimeB/Nifti/preproc_fmriprep-20.2.0/fmriprep/';

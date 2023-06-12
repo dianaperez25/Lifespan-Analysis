@@ -9,10 +9,10 @@ addpath(genpath('/Users/dianaperez/Documents/Dependencies/graphtools/'))
 %% CHANGE THIS
 data_type = 'parcels'; % parcels or vertices
 minNetSize = 20; %400 for vertices, 20 for parcels?
-sub = 'LS03';
+sub = 'LS05';
 str = ['sub-' sub '_infomap'];
 %cd(['/scratch/dcr8536/infomap/' sub '/parcels/'])
-cd(['/Users/dianaperez/Desktop/Lifespan_infomap/infomap/' sub '/'])
+cd(['/Users/dianaperez/Desktop/Lifespan_infomap/infomap/' sub '/parcels/'])
 %template_fname = '/scratch/dcr8536/template.dtseries.nii';
 template_fname = '/Users/dianaperez/Desktop/template.dtseries.nii';
 
@@ -27,14 +27,14 @@ dlmwrite(['rawassn_minsize' num2str(minNetSize) '_regularized.txt'],regularized,
 thresholdarray = [0.0005:0.0005:0.004 0.005:0.005:0.05];%[0.003 0.004 0.005:0.005:0.05];
 infoassn = dlmread(['rawassn_minsize' num2str(minNetSize) '_regularized.txt']);
 %run conBensus
-conBensus(infoassn, str, [], thresholdarray*100, 'voxel', minNetSize)
+conBensus(infoassn, str, [], thresholdarray*100, 'parcel', minNetSize)
 load([str '_conBensus_weighted_minsize' num2str(minNetSize) '.mat'])
 %load template and save output of conBensus
 tmp = ft_read_cifti_mod(template_fname);
 switch data_type
     case 'parcels'
         % load parcellation file:
-        parcels = ft_read_cifti_mod(['/Users/dianaperez/Desktop/Lifespan_parcellations/sub-' sub '/sub-' sub '_individual_parcels_edgethresh_0.5.dtseries.nii']);
+        parcels = ft_read_cifti_mod(['/Users/dianaperez/Desktop/Lifespan_parcellations/GordonParcellation/sub-' sub '/sub-' sub '_individual_parcels_edgethresh_0.5.dtseries.nii']);
         %parcels = ft_read_cifti_mod(['/scratch/dcr8536/parcellations/sub-' sub '/sub-' sub '_individual_parcels_edgethresh_0.5.dtseries.nii']);
         unique_parcels = unique(parcels.data);
         if unique_parcels(1) == 0 
