@@ -1,9 +1,10 @@
-% make SNR maps
+function make_snr_masks(subject, sessions, data_dir)
 
-subject = 'LS03';
-sessions = 3;
-data_dir = '/scratch/dcr8536/surf_testing/Nifti/derivatives/preproc_FCProc';
-for ses = sessions
+
+%subject = 'LS03';
+%sessions = 3;
+%data_dir = '/scratch/dcr8536/surf_testing/Nifti/derivatives/preproc_FCProc';
+for ses = 1:sessions
     volfile = [data_dir '/sub-' subject '/ses-' num2str(ses) '/func/sub-' subject '_ses-' num2str(ses) '_task-rest_desc-mode1000_mean'];
     map_vol_to_surface_Lifespan_specific(volfile,subject)
     %make into a cifti
@@ -18,3 +19,14 @@ for ses = sessions
     ft_write_cifti_mod([volfile '.dtseries.nii'], template)
 end
 
+
+all_ses_data = [];
+for ses = sessions
+    volfile = [data_dir '/sub-' subject '/ses-' num2str(ses) '/func/sub-' subject '_ses-' num2str(ses) '_task-rest_desc-mode1000_mean'];
+    cifti = ft_read_cifti_mod([volfile '.dtseries.nii']);
+    ses_data = cifti.data;
+    all_ses_data = [all_ses_data ses_data];
+end
+
+end
+    

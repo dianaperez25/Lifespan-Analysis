@@ -3,10 +3,11 @@ clear all
 addpath(genpath('/projects/b1081/Scripts/Resources/'))
 
 % PATHS
-ind_parc_loc = '/scratch/dcr8536/parcellations/subsample_10/';
-surf_ts_loc = '/scratch/dcr8536/TimeB/Nifti/postFCproc_CIFTI/';
+%ind_parc_loc = '/scratch/dcr8536/parcellations/subsample_10/';
+ind_parc_loc = '/scratch/dcr8536/Lifespan_KongParcellation/';
+surf_ts_loc = '/projects/b1081/Lifespan/Nifti/derivatives/postFCproc_CIFTI/';
 output_dir = '/scratch/dcr8536/parcellations/avg_timecourses/';
-tmask_loc = '/scratch/dcr8536/TimeB/Nifti/preproc_fmriprep-20.2.0/fmriprep/';
+tmask_loc = '/projects/b1081/Lifespan/Nifti/derivatives/preproc_fmriprep-20.2.0/fmriprep/';
 % VARIABLES
 subject = {'LS02', 'LS03', 'LS05', 'LS08', 'LS11', 'LS14', 'LS16', 'LS17'};
 sessions = 5;
@@ -19,7 +20,8 @@ end
 % step 1: load the individualized parcellation file
 for sub = 1:numel(subject)
     % load the cifti file with individual parcels for each subject
-    ind_parc_fname = sprintf('%s/sub-%s/sub-%s_individual_parcels_edgethresh_0.5.dtseries.nii', ind_parc_loc, subject{sub}, subject{sub});
+    %ind_parc_fname = sprintf('%s/sub-%s/sub-%s_individual_parcels_edgethresh_0.5.dtseries.nii', ind_parc_loc, subject{sub}, subject{sub});
+    ind_parc_fname = sprintf('%s/sub-%s/sub-%s_cMSHBM.dtseries.nii', ind_parc_loc, subject{sub}, subject{sub});
     ind_parc = ft_read_cifti_mod(ind_parc_fname);
     surf_ts_concat = [];
     avg_parc_ts = [];
@@ -53,6 +55,6 @@ for sub = 1:numel(subject)
     end
     
     % step 4: save the file
-    save([output_dir 'sub-' subject{sub} '_individual_parcels_average_timecourses.mat'], 'avg_parc_ts', '-v7.3');
+    save([output_dir 'sub-' subject{sub} '_individual_parcels_average_timecourses_Kong.mat'], 'avg_parc_ts', '-v7.3');
     clear avg_parc_ts 
 end

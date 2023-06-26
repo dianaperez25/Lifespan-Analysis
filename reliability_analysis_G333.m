@@ -7,8 +7,8 @@ clear all
 %dataDir = '/projects/b1081/Lifespan/derivatives/preproc_FCProc/corrmats_Seitzman300/';
 %dataDir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Post-COVID/BIDS/derivatives/preproc_FCProc/corrmats_Seitzman300/';
 %dataDir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Segregation_analyses/iNetworks/Nifti/derivatives/preproc_FCProc/corrmats_Seitzman300/';
-dataDir = '/Users/dianaperez/Desktop/FC_Parcels_333/';
-output_dir = '/Users/dianaperez/Desktop/';
+dataDir = '/scratch/dcr8536/FC_Parcels_333/';
+output_dir = '/scratch/dcr8536/reliability/Parcels_333/';
 
 %% VARIABLES
 subject = {'LS02', 'LS03', 'LS05', 'LS08', 'LS11', 'LS14', 'LS16', 'LS17'};
@@ -20,12 +20,12 @@ sessions = 5;
 %% How many points to sample for "true" half
 %pts2sample = 8181; %8181 roughly equivalent to 150 minutes
 %pts2sample = 5454; %number of frames to sample for true half;roughly equals 100 minutes
-pts2sample = 3808;
+pts2sample = 3808; %~70 minutes
 %% How much data to add at each step
 %sampStep=272; %5 minutes, will add this number of frames each time it subsamples data
 sampStep=136;% roughly 2.5 mins -- 272 = 5 minutes, will add this number of frames each time it subsamples data
 %% How many iterations to run
-iterations = 10;
+iterations = 1000;
 %rgb colors for plotting results
 rgb_colors = [1 0 0;%LS02
             0, 1, 0;%LS03
@@ -35,7 +35,7 @@ rgb_colors = [1 0 0;%LS02
             0.4660 0.6740 0.188;%LS14
             0.9290 0.6940 0.1250;%LS16
             0.4940 0.1840 0.5560];%LS17
-rgb_colors = {'#808080', '#594D5B', '#C5C6D0', '#7F7D9C', '#9897A9', '#787276', '#7C6E7F', '#564C4D', '#696880', '#4D4C5C'}; % different shades of grey
+%rgb_colors = {'#808080', '#594D5B', '#C5C6D0', '#7F7D9C', '#9897A9', '#787276', '#7C6E7F', '#564C4D', '#696880', '#4D4C5C'}; % different shades of grey
         
 for sub = 1:numel(subject)    
     catData = [];
@@ -44,9 +44,9 @@ for sub = 1:numel(subject)
         %load mat file
         load([dataDir '/sub-' subject{sub} '_rest_ses-' num2str(i) '_parcel_timecourse.mat'])
         %apply tmask
-        masked_data = parcel_time';
+        masked_data = parcel_time(logical(tmask_concat'),:);
         %concatenate data
-        catData = [catData masked_data];
+        catData = [catData masked_data'];
         %catTmask = [catTmask tmask_concat'];
     end
 
@@ -161,12 +161,12 @@ for s = 1:numel(subject)
     hold on
 end
 
-%% HERE I calculate the mean across subjects manually
+
 for t = 1:48
     tmp = [];
     for s = 1:numel(subject)
-        if exist(means{1,s}{t})
-            tmp = [tmp;means{1,s}{t}];
+        if size(means{1,s},2)>=t
+            tmp = [tmp;means{1,s}(t)];
         else
             continue;
         end
@@ -179,13 +179,14 @@ plot(times_all(1,1:48),mean_of_means(1:48), ':', 'Color', [0,0,0], 'LineWidth',3
 ylabel('Pearson Correlation (r)');
 xlabel('Time (Minutes)');
 
-m = findobj(gca,'Type','line');
+%m = findobj(gca,'Type','line');
 
-hleg1 = legend(m(1:9), 'Mean', 'LS17', 'LS16', 'LS14', 'LS11', 'LS08', 'LS05', 'LS03', 'LS02', 'Location', 'SouthEast');
-hleg1.FontSize = 20;
-ax = gca;
-ax.FontSize = 24;
-set(gcf, 'Units', 'Normalized', 'OuterPosition', [0.5, 0.7, 0.5, 0.7]);
+%hleg1 = legend(m(1:9), 'Mean', 'LS17', 'LS16', 'LS14', 'LS11', 'LS08', 'LS05', 'LS03', 'LS02', 'Location', 'SouthEast');
+%hleg1.FontSize = 20;
+%ax = gca;
+%ax.FontSize = 24;
+% clear set
+% set(gcf, 'Units', 'Normalized', 'OuterPosition', [0.5, 0.7, 0.5, 0.7]);
 
 print(gcf,[output_dir 'Lifespan_Reliability_truehalf_' num2str(pts2sample) '.jpg'],'-dpng','-r300');
 
