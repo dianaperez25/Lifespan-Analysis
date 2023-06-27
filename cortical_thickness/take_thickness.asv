@@ -8,5 +8,4 @@ for h = 1:numel(hems)
     wm_surf = ft_read_cifti_mod(sprintf('%s/sub-%s/MNI/fsaverage_LR32k/sub-%s.%s.white.32k_fs_LR.surf.gii',data_dir, subject, subject, hems{h}));
     cort_thickness = wm_surf.data-pial_surf.data;
     wm_surf.data = cort_thickness;
-    ft_write_cifti_mod(sprintf('%s/sub-%s.%s.calculated_thickness.32k_fs_LR.surf.gii',out_dir, subject, hems{h}), wm_surf);
-end
+    ft_write_cifti_mod(sprintf('%s/sub-%s.%s.calculated_thickness.32k_fs_LR.surf.gii',out_dir, subject, hems{h}), wm_surf_);
