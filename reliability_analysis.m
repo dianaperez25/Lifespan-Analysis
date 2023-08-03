@@ -6,12 +6,19 @@ clear all
 
 %dataDir = '/projects/b1081/Lifespan/derivatives/preproc_FCProc/corrmats_Seitzman300/';
 %dataDir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Post-COVID/BIDS/derivatives/preproc_FCProc/corrmats_Seitzman300/';
-%dataDir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Segregation_analyses/iNetworks/Nifti/derivatives/preproc_FCProc/corrmats_Seitzman300/';
-dataDir = '/scratch/dcr8536/FC_Parcels_333/';
-output_dir = '/scratch/dcr8536/reliability/Parcels_333/';
-
+dataDir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/iNetworks/Nifti/FC_Parcels_333/';
+%dataDir = '/scratch/dcr8536/FC_Parcels_333/';
+%output_dir = '/scratch/dcr8536/reliability/Parcels_333/';
+output_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Diana/reliability/';
 %% VARIABLES
 subject = {'LS02', 'LS03', 'LS05', 'LS08', 'LS11', 'LS14', 'LS16', 'LS17'};
+% subject = {'INET001', 'INET002', 'INET003', 'INET005', 'INET006','INET010',...
+% 'INET018','INET019', 'INET026', 'INET030',  'INET032', 'INET033',...
+% 'INET034', 'INET035', 'INET036', 'INET038', 'INET039', 'INET040', 'INET041',...
+% 'INET042', 'INET043', 'INET044', 'INET045', 'INET046', 'INET047', 'INET048',...
+% 'INET049', 'INET050', 'INET051', 'INET052', 'INET053', 'INET055', 'INET056',...
+% 'INET057', 'INET058', 'INET059', 'INET060', 'INET061', 'INET062', 'INET063',...
+% 'INET065', 'INET067', 'INET068', 'INET069', 'INET070', 'INET071', 'INET072', 'INET073'}; %
 sessions = 5;
 %runs = [9,9,11,8,9;8,8,8,9,9];
 
@@ -157,7 +164,8 @@ end
 
 figure;
 for s = 1:numel(subject)
-    plot(times_all(s,1:size(means{1,s},2)),means{1,s},'Color',rgb_colors(s,:),'LineWidth', 3)
+   % plot(times_all(s,1:size(means{1,s},2)),means{1,s},'Color',rgb_colors(s,:),'LineWidth', 3)
+   plot(times_all(s,1:size(means{1,s},2)),means{1,s})
     hold on
 end
 
@@ -174,7 +182,7 @@ for t = 1:48
     mean_of_means(t) = mean(tmp);
 end
 
-plot(times_all(1,1:48),mean_of_means(1:48), ':', 'Color', [0,0,0], 'LineWidth',3) %average
+plot(times_all(1,1:35),mean_of_means(1:35), ':', 'Color', [0,0,0], 'LineWidth',3) %average
 
 ylabel('Pearson Correlation (r)');
 xlabel('Time (Minutes)');
