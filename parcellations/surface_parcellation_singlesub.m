@@ -34,7 +34,7 @@ function  surface_parcellation_singlesub(subject,dconnfile,surfdir,subsample,dos
 
 % PARAMETERS TO SET
 smooth = 2.55; % sigma for geodesic smoothing applied to gradient maps
-workbenchdir = '/data/cn/data1/linux/bin/'; %location of workbench
+workbenchdir = '/projects/b1081/Scripts/workbench2/bin_linux64/'; %location of workbench
 
 %-----------------------------------------------------------------------
 
@@ -118,7 +118,7 @@ ciftistruct_orig.data = [];
 % Calculate gradients
 disp('Calculating gradient')
 gradsname = 'corrofcorr_allgrad_LR_subcort';
-[~,~] = system([workbenchdir '/wb_command -cifti-gradient ' outputdir '/corrofcorr_LR_subcort.dtseries.nii COLUMN ' outputdir '/' gradsname '.dtseries.nii -left-surface ' midsurf_32k_sub{1} ' -right-surface ' midsurf_32k_sub{2}]);
+[~,~] = system([workbenchdir '/wb_command -cifti-gradient ' outputdir '/corrofcorr_LR_subcort.dtseries.nii COLUMN ' outputdir '/' gradsname '.dtseries.nii -left-surface ' midsurf_32k_sub{1} ' -right-surface ' midsurf_32k_sub{2}])
 
 delete([outputdir '/corrofcorr_LR_subcort.dtseries.nii'])
 

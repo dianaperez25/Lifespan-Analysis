@@ -1,14 +1,14 @@
-%topdir = '/projects/b1081/Lifespan/';
-topdir = '/scratch/dcr8536/iNetworks/';%'/projects/b1081/iNetworks/';
+topdir = '/projects/b1081/Lifespan/';
+%topdir = '/scratch/dcr8536/iNetworks/';%'/projects/b1081/iNetworks/';
 addpath(genpath('/projects/b1081/dependencies/'));
 
-%subjects = 1:10;
-subjects = {'INET034', 'INET035', 'INET036', 'INET039', 'INET040', 'INET041', 'INET042', 'INET044', 'INET045', 'INET047', 'INET050', 'INET051', 'INET057', 'INET058', 'INET060', 'INET062', 'INET063', 'INET065', 'INET067', 'INET068'};%{'LS02', 'LS03', 'LS05', 'LS08', 'LS11', 'LS14', 'LS16', 'LS17','INET001', 'INET002', 'INET003', 'INET005', 'INET006', 'INET010', 'INET016', 'INET018','INET019', 'INET026','INET030'};
+subjects = {'LS02', 'LS03', 'LS05', 'LS08', 'LS11', 'LS14', 'LS16', 'LS17'};
+%subjects = {'INET034', 'INET035', 'INET036', 'INET039', 'INET040', 'INET041', 'INET042', 'INET044', 'INET045', 'INET047', 'INET050', 'INET051', 'INET057', 'INET058', 'INET060', 'INET062', 'INET063', 'INET065', 'INET067', 'INET068'};%{'LS02', 'LS03', 'LS05', 'LS08', 'LS11', 'LS14', 'LS16', 'LS17','INET001', 'INET002', 'INET003', 'INET005', 'INET006', 'INET010', 'INET016', 'INET018','INET019', 'INET026','INET030'};
 session = 4;
 runs = 11;%[7,7,8,0,0;9,9,11,8,9;8,8,8,9,9];
 %runs = [7,8,9,9,9; 9,9,9,10,11; 9,7,8,8,9; 8,7,8,8,8; 8,8,8,10,10; 8,7,8,10,9; 8,8,7,10,8; 9,7,8,8,8;6,8,8,9,0;7,7,8,9,0;7,7,9,8,0;8,7,9,9,0;7,8,8,9,0;7,7,9,8,0; 8,7,8,9,0;6,9,7,9,0;8,7,9,9,0;4,7,7,9,0];
 %outputdir_top = [topdir '/TaskFC/FC_Parcels/'];
-outputdir = '/projects/b1081/member_directories/dperez/FC_Parcels_333/';%/scratch/dcr8536/TimeA/Nifti/postFCproc_CIFTI/FC_Parcels_333/'; %change this and fcdir below as needed
+outputdir = '/scratch/dcr8536/FC_Parcels_333/';%/scratch/dcr8536/TimeA/Nifti/postFCproc_CIFTI/FC_Parcels_333/'; %change this and fcdir below as needed
 if ~exist(outputdir)
     mkdir(outputdir);
 end
@@ -18,13 +18,13 @@ end
 task = 'rest';
 for s = 1:length(subjects)
     if contains(subjects{s}, 'LS02')
-        session = 3;
-        topdir_rest = '/scratch/dcr8536/TimeA/Nifti/postFCproc_CIFTI/';
-        topdir_tmask = '/scratch/dcr8536/TimeA/Nifti/preproc_fmriprep-20.2.0/fmriprep/';
+        session = 5;
+        topdir_rest = '/projects/b1081/Lifespan/Nifti/derivatives/postFCproc_CIFTI/';
+        topdir_tmask = '/projects/b1081/Lifespan/Nifti/derivatives/preproc_fmriprep-20.2.0/fmriprep/';
     elseif contains(subjects{s}, 'LS')
         session = 5;
-        topdir_rest = '/scratch/dcr8536/TimeA/Nifti/postFCproc_CIFTI/';
-        topdir_tmask = '/scratch/dcr8536/TimeA/Nifti/preproc_fmriprep-20.2.0/fmriprep/';
+        topdir_rest = '/projects/b1081/Lifespan/Nifti/derivatives/postFCproc_CIFTI/';
+        topdir_tmask = '/projects/b1081/Lifespan/Nifti/derivatives/preproc_fmriprep-20.2.0/fmriprep/';
     elseif contains(subjects{s}, 'INET')
         session = 4;
         topdir_rest = '/scratch/dcr8536/iNetworks/';%'/projects/b1081/iNetworks/Nifti/derivatives/postFCproc_CIFTI_20.2.0/';%/data/nil-bluearc/GMT/Laumann/MSC/';
@@ -40,7 +40,7 @@ for s = 1:length(subjects)
         if exist(fcFile)
             fc_data = ft_read_cifti_mod(fcFile);
             timecourse = [timecourse fc_data.data];
-            tmaskFile = sprintf('%s/%s/ses-%d/FD_outputs/%s_ses-%d_task-rest_run-%d_desc-tmask_fFD.txt', topdir_rest, subject, ses, subject, ses, run);
+            tmaskFile = sprintf('%s/%s/ses-%d/func/FD_outputs/%s_ses-%d_task-rest_run-%d_desc-tmask_fFD.txt', topdir_tmask, subject, ses, subject, ses, run);
             if exist(tmaskFile)
             tmask{run} = table2array(readtable(tmaskFile));
             tmask_concat = [tmask_concat tmask{run}'];

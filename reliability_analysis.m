@@ -1,29 +1,39 @@
 %% Script for Reliability Analysis
-% This script will concatenate each subject's timeseries across runs and sessions, 
-% then split them into a true half and a separata data pool
-% Then create connectivity matrices for the true half and a subset of the data pool 
-% to calculate the similarity and test-retest reliability
+
 clear all
-% ------------------------------------------------------------------------
 
-%272 frames = 4.99 min, 
+%% PATHS
+
 %dataDir = '/projects/b1081/Lifespan/derivatives/preproc_FCProc/corrmats_Seitzman300/';
-dataDir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Post-COVID/BIDS/derivatives/preproc_FCProc/corrmats_Seitzman300/';
-<<<<<<< Updated upstream
-output_dir = '/Users/dianaperez/Desktop/Segregation_Analyses/';
-
-=======
->>>>>>> Stashed changes
+%dataDir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Post-COVID/BIDS/derivatives/preproc_FCProc/corrmats_Seitzman300/';
+dataDir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/iNetworks/Nifti/FC_Parcels_333/';
+%dataDir = '/scratch/dcr8536/FC_Parcels_333/';
+%output_dir = '/scratch/dcr8536/reliability/Parcels_333/';
+output_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Diana/reliability/';
+%% VARIABLES
 subject = {'LS02', 'LS03', 'LS05', 'LS08', 'LS11', 'LS14', 'LS16', 'LS17'};
+% subject = {'INET001', 'INET002', 'INET003', 'INET005', 'INET006','INET010',...
+% 'INET018','INET019', 'INET026', 'INET030',  'INET032', 'INET033',...
+% 'INET034', 'INET035', 'INET036', 'INET038', 'INET039', 'INET040', 'INET041',...
+% 'INET042', 'INET043', 'INET044', 'INET045', 'INET046', 'INET047', 'INET048',...
+% 'INET049', 'INET050', 'INET051', 'INET052', 'INET053', 'INET055', 'INET056',...
+% 'INET057', 'INET058', 'INET059', 'INET060', 'INET061', 'INET062', 'INET063',...
+% 'INET065', 'INET067', 'INET068', 'INET069', 'INET070', 'INET071', 'INET072', 'INET073'}; %
 sessions = 5;
 %runs = [9,9,11,8,9;8,8,8,9,9];
+
+%subject = {'INET001','INET002', 'INET003','INET005','INET006','INET010','INET016','INET018','INET019','INET030'};
+%sessions = 4;
+%% How many points to sample for "true" half
 %pts2sample = 8181; %8181 roughly equivalent to 150 minutes
-<<<<<<< Updated upstream
 %pts2sample = 5454; %number of frames to sample for true half;roughly equals 100 minutes
-pts2sample = 3818;
+pts2sample = 3808; %~70 minutes
+%% How much data to add at each step
 %sampStep=272; %5 minutes, will add this number of frames each time it subsamples data
 sampStep=136;% roughly 2.5 mins -- 272 = 5 minutes, will add this number of frames each time it subsamples data
-iterations = 10;
+%% How many iterations to run
+iterations = 1000;
+%rgb colors for plotting results
 rgb_colors = [1 0 0;%LS02
             0, 1, 0;%LS03
             0, 0, 1;%LS05
@@ -32,68 +42,84 @@ rgb_colors = [1 0 0;%LS02
             0.4660 0.6740 0.188;%LS14
             0.9290 0.6940 0.1250;%LS16
             0.4940 0.1840 0.5560];%LS17
+%rgb_colors = {'#808080', '#594D5B', '#C5C6D0', '#7F7D9C', '#9897A9', '#787276', '#7C6E7F', '#564C4D', '#696880', '#4D4C5C'}; % different shades of grey
         
-=======
-pts2sample = 5454; %number of frames to sample for true half;roughly equals 100 minutes
-sampStep=272; %5 minutes, will add this number of frames each time it subsamples data
-perms = 1000;
-
->>>>>>> Stashed changes
-for s = 1:numel(subject)
-    
+for sub = 1:numel(subject)    
     catData = [];
-    catTmask = [];
-    
-    for i = 1:sessions
-        
+    catTmask = [];    
+    for i = 1:sessions        
         %load mat file
-        load([dataDir '/sub-' subject{s} '/sub-' subject{s} '_sess-' num2str(i) '_task-rest_corrmat_Seitzman300.mat'])
-        %get number of runs
-        num_runs = size(sess_roi_timeseries,2);
-        %randomize runs
-        runs_rand = randperm(num_runs);
-        for 1:num_runs            
-            %apply tmask
-            masked_data = sess_roi_timeseries_concat(:,logical(tmask_concat'));
-
+        load([dataDir '/sub-' subject{sub} '_rest_ses-' num2str(i) '_parcel_timecourse.mat'])
+        %apply tmask
+        masked_data = parcel_time(logical(tmask_concat'),:);
         %concatenate data
-    %        catData = [catData masked_data];
-        catData = [catData masked_data];
-        catTmask = [catTmask tmask_concat'];
+        catData = [catData masked_data'];
+        %catTmask = [catTmask tmask_concat'];
+    end
+
+    disp(sprintf('Total number of sample points for subject %s is %d by %d...', subject{sub}, size(catData,1), size(catData,2)))
+    
+    indices = [1:1:size(catData,2)]; % create a matrix of indices for each data point
+    num_sets = floor((length(indices))/sampStep); % calculate how many chunks of data are possible given the total number of data points
+    clear indices
+    count = 1; 
+    % create a matrix with indices for data points belonging to each chunk
+    % of data. Each row corresponds to a chunk of sampStep data points
+    for set = 1:num_sets
+        indices_for_data(set,:) = count:(count+sampStep-1);
+        count = count + sampStep;
     end
     
-    %I think this should be 10,816
-    disp(sprintf('Total number of sample points for subject %s is %d by %d...', subject{s}, size(catData,1), size(catData,2)))
-
-    %make corrmats for true half
-    %true-half is 150min=8181 samp points (TR = 1.1; (8181*1.1)/60=149.99)
     for p = 1:iterations
-        rng('shuffle');
+        rng('shuffle');    
+        % now randomly pick a set of contigous chunks that add up to the
+        % amount of data needed for the true half
+        count = datasample(1:num_sets,1);
+        true_half_inds = [];
+        num_true_half_sets = 1;
+        while length(true_half_inds) < pts2sample
+            if count > num_sets % if we reach the end of contigous chunks, circle back to the beginning
+                count = 1;            
+            end
+        true_half_inds = [true_half_inds; indices_for_data(count,:)']; % all the indices for the data points that will be in the true half of this iteration
+        count = count + 1;
+        num_true_half_sets = num_true_half_sets + 1; % count the number of sets so we can delete them later
+        end
         
-    ind = randperm(size(catData,2));
-    truehalf = catData(:,ind(1:pts2sample));
-    corrmat_truehalf = paircorr_mod(truehalf');
-    maskmat = ones(300);
-    maskmat = logical(triu(maskmat, 1));
-    truehalf_corrlin(1,:) = corrmat_truehalf(maskmat);
+        %make corrmats for true half
+        truehalf = catData(:,true_half_inds);
+        corrmat_truehalf = paircorr_mod(truehalf');
+        maskmat = ones(333);
+        maskmat = logical(triu(maskmat, 1));
+        truehalf_corrlin(1,:) = corrmat_truehalf(maskmat);
+        
+        % now let's chunk the rest of the data, after excluding the true half
+        rest_of_data = catData;
+        rest_of_data(:,true_half_inds) = []; % delete the chunks of data that were used for true half because independent samples
+        indices_for_rest_of_data = indices_for_data; % let's copy this matrix, so we can use same strategy for sampling increasing amount of data
+        indices_for_rest_of_data((end-(num_true_half_sets-1)):end,:) = []; % but let's delete the chunks that equate to the amount of data that was deleted so we don't get an error
+        times = [2.5:2.5:((size(indices_for_rest_of_data,1))*2.5)]; % calculate the data steps
 
-    rest_of_data = catData(:,ind(pts2sample+1:end));
-    times = floor((size(rest_of_data,2))/sampStep);
-    times = [2.5:2.5:(times*2.5)];
-    %calculate how many samples we have data for
-   
-    
-    %sample data, make corrmats for each sample, make linear matrix with
-    %corrmats
-    for t = 1:numel(times)
-        sampledDatas{t} = datasample(rest_of_data,sampStep*t,2);
-        corrmat = paircorr_mod(sampledDatas{t}');
-        corrs{t} = paircorr_mod(triu(corrmat_truehalf), triu(corrmat));
-        corrlins(t,:) = corrmat(maskmat);
-    end
+        %Let's start sampling data, make corrmats for each sample, make linear matrix with
+        %corrmats
+        
+        for t = 1:numel(times) % for each of the time steps that we calculated before...
+            inds_this_chunk = []; sets = []; %initialize some vars                 
+            count = datasample(1:size(indices_for_rest_of_data,1),1); % randomly select a starting point from which we'll start a count            
+            while length(sets) < t % while we are still sampling sets
+                if count > size(indices_for_rest_of_data,1) %if we run out of sets
+                    count = 1; % circle back to beginning
+                end
+                sets = [sets; count]; % else, keep adding a contigous set at a time
+                count = count + 1;
+            end
+            inds_this_chunk = [inds_this_chunk; indices_for_rest_of_data(sets,:)'];
+            sampledDatas{t} = rest_of_data(:,inds_this_chunk);
+            corrmat = paircorr_mod(sampledDatas{t}');
+            corrs{t} = paircorr_mod(triu(corrmat_truehalf), triu(corrmat));
+            corrlins(t,:) = corrmat(maskmat);
+        end
 
-    
-    
     %run corrs between true half corrmats and each samples corrmats
     for j = 1:size(corrlins,1)
         tmpcorr = corrcoef(truehalf_corrlin', corrlins(j,:)', 'rows', 'complete');
@@ -101,19 +127,28 @@ for s = 1:numel(subject)
         clear tmpcorr
     end
     end
-    allsubs_corrs{s} = corr;
+    allsubs_corrs{sub} = corr;
+    means{sub} = mean(corr);
     %variable with amount of time sampled in each sample for each subject
-    times_all(s,1:size(times,2)) = times;
+    times_all(sub,1:size(times,2)) = times;
     
-    clear corr
-    clear times
     clear catData
     clear catTmask
+    clear masked_data
+    clear num_sets
+    clear indices_for_data
+    clear true_half
+    clear true_half_corrlin
+    clear rest_of_data
+    clear indices_for_rest_of_data
+    clear corr
+    clear times
+    clear sampledDatas
     clear corrlins
     clear corrmat
     clear corrmat_truehalf
     clear corrs
-    clear masked_data
+    
     clear sampledDatas
     clear tmask
     clear tmask_concat
@@ -123,47 +158,45 @@ for s = 1:numel(subject)
     clear sess_roi_timeseries_concat
     
 end
+ 
+% Take mean across subjects of the mean of the correlation values across
+% iterations
 
-<<<<<<< Updated upstream
-corrs_for_mean = [corr(1:3,1:20); corr(5:8,1:20)];
-mean = mean(corr,1);%mean(corrs_for_mean);
-=======
-%corrs_for_mean = [corr(1:3,1:20; corr(5:6,1:20)];
-mean = mean(corrs_for_mean);
->>>>>>> Stashed changes
-%plot reliability curves
-times =[5:5:100];
 figure;
-plot(times(1:20),corr(1,1:20),'Color',[1, 0, 0],'LineWidth', 3) %LS02
-hold on
-plot(times(1:20),corr(2,1:20),'Color',[0, 1, 0],'LineWidth', 3) %LS03
-hold on
-plot(times(1:20),corr(3,1:20),'Color',[0, 0, 1],'LineWidth', 3)%LS05
-hold on
-plot(times(1:3),corr(4,1:3),'Color',[0, 1, 1],'LineWidth', 3)%LS08
-hold on
-plot(times(1:20),corr(5,1:20),'Color',[1, 0, 1],'LineWidth', 3)%LS11
-hold on
-plot(times(1:20),corr(6,1:20),'Color',[0.4660 0.6740 0.1880],'LineWidth', 3)%LS14
-hold on
-plot(times(1:9),corr(7,1:9),'Color',[0.9290 0.6940 0.1250],'LineWidth', 3)%LS14
-hold on
-plot(times(1:14),corr(8,1:14),'Color',[0.4940 0.1840 0.5560],'LineWidth', 3)%LS14
-hold on
-plot(times(1:20),mean(1:20), ':', 'Color', [0,0,0], 'LineWidth',3) %average
+for s = 1:numel(subject)
+   % plot(times_all(s,1:size(means{1,s},2)),means{1,s},'Color',rgb_colors(s,:),'LineWidth', 3)
+   plot(times_all(s,1:size(means{1,s},2)),means{1,s})
+    hold on
+end
+
+
+for t = 1:48
+    tmp = [];
+    for s = 1:numel(subject)
+        if size(means{1,s},2)>=t
+            tmp = [tmp;means{1,s}(t)];
+        else
+            continue;
+        end
+    end
+    mean_of_means(t) = mean(tmp);
+end
+
+plot(times_all(1,1:35),mean_of_means(1:35), ':', 'Color', [0,0,0], 'LineWidth',3) %average
 
 ylabel('Pearson Correlation (r)');
 xlabel('Time (Minutes)');
 
-m = findobj(gca,'Type','line');
+%m = findobj(gca,'Type','line');
 
-hleg1 = legend(m(1:9), 'Mean', 'LS17', 'LS16', 'LS14', 'LS11', 'LS08', 'LS05', 'LS03', 'LS02', 'Location', 'SouthEast');
-hleg1.FontSize = 20;
-ax = gca;
-ax.FontSize = 24;
-set(gcf, 'Units', 'Normalized', 'OuterPosition', [0.5, 0.7, 0.5, 0.7]);
+%hleg1 = legend(m(1:9), 'Mean', 'LS17', 'LS16', 'LS14', 'LS11', 'LS08', 'LS05', 'LS03', 'LS02', 'Location', 'SouthEast');
+%hleg1.FontSize = 20;
+%ax = gca;
+%ax.FontSize = 24;
+% clear set
+% set(gcf, 'Units', 'Normalized', 'OuterPosition', [0.5, 0.7, 0.5, 0.7]);
 
-print(gcf,['/Volumes/RESEARCH_HD/Lifespan/CNS_Analyses/ReliabilityLifespanRestDatatruhalf' num2str(pts2sample) '.jpg'],'-dpng','-r300');
+print(gcf,[output_dir 'Lifespan_Reliability_truehalf_' num2str(pts2sample) '.jpg'],'-dpng','-r300');
 
 
 

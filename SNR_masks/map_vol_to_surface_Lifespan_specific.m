@@ -6,28 +6,27 @@ function map_vol_to_surface_MSCspecific(volfile,subject)
 % path to goodvoxels - use the one from the first day. For this purpose
 % (just mapping), just use the first one in the folder. Could make a union
 % mask eventually to be more accurate
-goodvoxdir = ['/scratch/dcr8536/surf_testing/Nifti/derivatives/postFCproc_CIFTI/sub-' subject '/ses-1/goodvoxels/'];
+goodvoxdir = ['/projects/b1081/Lifespan/Nifti/derivatives/postFCproc_CIFTI/sub-' subject '/ses-1/goodvoxels/'];
 goodvoxmask = [goodvoxdir 'sub-' subject '_ses-1_task-rest_goodvoxels.nii.gz'];
+if ~exist(goodvoxmask)
+    % calculate goodvoxels for session 1 only
+    goodvox_fname = goodvoxels_wrapper(subject,s,tmask_names,preprocdata_names,surffuncdir,allstart_fstring2,run_nums,fs_LR_surfdir,goodvoxfolder,...
+        T1name_end,space_short,force_remake_concat,force_ribbon,force_goodvoxels);
+end
 
-surfdir = '/scratch/dcr8536/surf_testing/Nifti/derivatives/freesurfer-6.0.1/FREESURFER_fs_LR/';
+surfdir = '/projects/b1081/Lifespan/Nifti/derivatives/freesurfer-6.0.1/FREESURFER_fs_LR/';
 %timdir = '/data/nil-bluearc/GMT/Laumann/MSC'; % DP: not sure what this is
 maskdir = '/projects/b1081/Scripts/CIFTI_RELATED/Resources/cifti_masks/subcortical_mask_LR_333_MNI.nii.gz';
 medial_mask_L = '/projects/b1081/Scripts/CIFTI_RELATED/Resources/cifti_masks/L.atlasroi.32k_fs_LR.shape.gii';
 medial_mask_R = '/projects/b1081/Scripts/CIFTI_RELATED/Resources/cifti_masks/R.atlasroi.32k_fs_LR.shape.gii';
 workbenchdir = '/projects/b1081/Scripts/workbench2/bin_linux64/';
 
-
-% first, make a nifti version fo the file
-% Note: annoyingly have to adjust some FIDL output files to have the center
-% coordinate information
-%prep_nifti_file(volfile)
-
 % resample to the surface using the subject's own pial/white/etc. data
 HEMS = {'L','R'};
 for hem = 1:2
 
     midsurf = [surfdir '/sub-' subject '/MNI/Native/sub-' subject '.' HEMS{hem} '.midthickness.native.surf.gii'];
-    midsurf_LR32k = [surfdir '/sub-' subject '/MNI/fsaverage_LR32k/sub-' subject '.' HEMS{hem} '.midthickness.32k_fs_LRtesting1.surf.gii'];
+    midsurf_LR32k = [surfdir '/sub-' subject '/MNI/fsaverage_LR32k/sub-' subject '.' HEMS{hem} '.midthickness.32k_fs_LR.surf.gii'];
     whitesurf = [surfdir '/sub-' subject '/MNI/Native/sub-' subject '.' HEMS{hem} '.white.native.surf.gii'];
     pialsurf = [surfdir '/sub-' subject '/MNI/Native/sub-' subject '.' HEMS{hem} '.pial.native.surf.gii'];
     nativedefsphere = [surfdir '/sub-' subject '/MNI/Native/sub-' subject '.' HEMS{hem} '.sphere.reg.reg_LR.native.surf.gii'];
@@ -42,7 +41,6 @@ for hem = 1:2
     delete([volfile '_' HEMS{hem} '_dil10.func.gii']);
 
 end
-
 
 end
 
