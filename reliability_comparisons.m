@@ -16,7 +16,7 @@ LS_times = times_all;
 LS_means = means;
 LS_mean_of_means = mean_of_means;
 LS_allsubs_corrs = allsubs_corrs;
-path_to_data = '/Users/diana/Desktop/iNetworks_reliability_v1.mat';
+path_to_data = '/Users/dianaperez/Desktop/iNet_Reliability_truehalf_70mins_7+runs.jpg';%'/Users/diana/Desktop/iNetworks_reliability_v1.mat';
 load(path_to_data);
 iNet_times = times_all;
 iNet_means = means;
@@ -39,8 +39,16 @@ end
 
 % h = 0 does not reject the null hypothesis, 1 does
 % p = p-value
-[h1,p1] = ttest2(LS_peak_reliability,iNet_peak_reliability,'Vartype','unequal')
+[h1,p1] = ttest2(LS_peak_reliability,iNet_peak_reliability,'Vartype','unequal');
+LS_avg_peak = mean(LS_peak_reliability);
+iNet_avg_peak = mean(iNet_peak_reliability);
+if h1 == 1
+    str = 'significant';
+else
+    str = 'non significant';
+end
 
+fprintf('The comparison of peak reliability (Lifespan = %d, iNet = %d) is %s, with a p-value of %d \n', LS_avg_peak, iNet_avg_peak, str, p1)
 % comparison of the time it takes to reach .85
 LS_time_to_reach = [];
 for sub = 1:numel(LS_subject);
@@ -64,5 +72,15 @@ for sub = 1:numel(iNet_subject);
     end
 end
 
-[h2,p2] = ttest2(LS_time_to_reach,iNet_time_to_reach,'Vartype','unequal')
+[h2,p2] = ttest2(LS_time_to_reach,iNet_time_to_reach,'Vartype','unequal');
+LS_avg_time = mean(LS_time_to_reach);
+iNet_avg_time = mean(iNet_time_to_reach);
+
+if h2 == 1
+    str = 'significant';
+else
+    str = 'non significant';
+end
+
+fprintf('The comparison of time it takes to reach 0.85 (Lifespan = %d, iNet = %d) is %s, with a p-value of %d \n', LS_avg_time, iNet_avg_time, str, p2)
 
