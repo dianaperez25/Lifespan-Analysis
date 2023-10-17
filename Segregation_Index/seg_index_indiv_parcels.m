@@ -21,15 +21,22 @@ clear all
 % ------------------------------------------------------------------------
 %% PATHS
 % ------------------------------------------------------------------------
-parcel_timecourse_dir = '/scratch/dcr8536/parcellations/avg_timecourses/';
-network_map_dir = '/scratch/dcr8536/parcellations/'
+parcel_timecourse_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/parcellations/Gordon_Parcellation/avg_timecourses/';
+network_map_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/parcellations/Gordon_Parcellation/'
 % ------------------------------------------------------------------------
 %% VARIABLES
 % ------------------------------------------------------------------------
 subs = {'LS02', 'LS03', 'LS05', 'LS08', 'LS11', 'LS14', 'LS16', 'LS17'};
-
+%subs = {'INET001', 'INET002', 'INET003', 'INET005', 'INET006','INET010',...
+% 'INET018','INET019', 'INET026', 'INET030',  'INET032', 'INET033',...
+% 'INET034', 'INET035', 'INET036', 'INET038', 'INET039', 'INET040', 'INET041',...
+% 'INET042', 'INET043', 'INET044', 'INET045', 'INET046', 'INET047', 'INET048',...
+% 'INET049', 'INET050', 'INET051', 'INET052', 'INET053', 'INET055', 'INET056',...
+% 'INET057', 'INET058', 'INET059', 'INET060', 'INET061', 'INET062', 'INET063',...
+% 'INET065', 'INET067', 'INET068', 'INET069', 'INET070', 'INET071', 'INET072', 'INET073'}; %
 network_z.within = [];
 network_z.between = [];
+atlas_params = atlas_parameters_GrattonLab('Seitzman300','/Volumes/fsmresfiles/PBS/Gratton_Lab/Atlases/');
 network_z.networks = atlas_params.networks{2:end}; %copy names of each network
 %network_z.networks{1} = [];
 seg_ind = [];
@@ -41,16 +48,28 @@ between_corrs = [];
 %% MAIN FOR-LOOP
 % ------------------------------------------------------------------------
 for sub = 1:numel(subs)
+    % load parcellation cifti
+    parcel_fname = sprintf('%s/sub-%s/sub-%s_individual_parcels_edgethresh_0.5.dtseries.nii', network_map_dir, subs{sub}, subs{sub});
+    parcel_map = ft_read_cifti_mod(parcel_fname);
+    unique_IDs = unique(parcel_map.data);
+    if unique_IDs(1)==0
+        unique_IDs(1)=[];
+    end
+    consec_parc_map = zeros(size(parcel_map.data));
     
+    for parc = 1:length(unique_IDs)
+        consec_parc_map(find(parcel_map.data==unique_IDs(parc))) = parc;
+    end
     %load parcels average timecourse
     %% DP: CHECK IF IT'S ALREADY MASKED
-    parcel_tc_fname = sprintf('%s/sub-%s_individual_parcels_average_timecourses.mat', parcel_timecourse_dir, subs{sub});
+    parcel_tc_fname = sprintf('%s/sub-%s_individual_parcels_average_timecourses_Gordon.mat', parcel_timecourse_dir, subs{sub});
     mat_struct = load(parcel_tc_fname);
+    
         
     %% DP: DO I HAVE TO EXTRACT A SPECIFIC VARIABLE?
     
     %load network map
-    netmap_fname = sprintf('%s/sub-%s/sub-%s_indiv_parcels_net_assigned.dtseries.nii', network_map_dir, subs{sub}, subs{sub});
+    netmap_fname = sprintf('%s/sub-%s/sub-%s_indiv_parcels_net_assigned_binarized_Gordon.dtseries.nii', network_map_dir, subs{sub}, subs{sub});
     netmap = ft_read_cifti_mod(netmap_fname);
     
     % first sort by network
@@ -63,12 +82,13 @@ for sub = 1:numel(subs)
     for net = 1:length(unique_net_IDs)
         % fing the parcels that are assigned to each network
         net_size(net,1) = unique_net_IDs(net); 
-        net_parcels = find(netmap.data==unique_net_IDs(net));
+        net_verts = find(netmap.data==unique_net_IDs(net));
+        net_parcels = unique(consec_parc_map(net_verts));
         net_size(net,2) = length(net_parcels);
         parcels_sorted = [parcels_sorted; net_parcels];
     end
     num_nodes = length(parcels_sorted);
-    parc_tc_sorted = mat_struct(parcels_sorted);
+    parc_tc_sorted = mat_struct.avg_parc_ts(parcels_sorted,:);
     matrix_sorted = single(FisherTransform(paircorr_mod(parc_tc_sorted')));% fisher transform r values
         
         
@@ -79,7 +99,7 @@ for sub = 1:numel(subs)
         
         %num_networks = size(atlas_params.networks,1); % extract number of networks
         count = 1;
-        for net = 2:size(net_size,2) % go through each network
+        for net = 1:size(net_size,1) % go through each network
             net_parcels = count:(count+net_size(net,2)-1); %extract the parcels belonging to system n            
             weights(net) = net_size(net,2)/length(parcels_sorted);
             %% GET WITHIN SYSTEM CORRELATIONS
@@ -98,7 +118,7 @@ for sub = 1:numel(subs)
             clear maskmat tmp % clear up some variables
             
             %% GET BETWEEN SYSTEM CORRELATIONS
-            tmp = matrix(net_parcels(1):net_parcels(end), 1:num_nodes); % extract z values for nth network
+            tmp = matrix_sorted(net_parcels(1):net_parcels(end), 1:num_nodes); % extract z values for nth network
             maskmat = ones(size(tmp)); % make another
             maskmat(:,net_parcels(1):net_parcels(end)) = 0; % mask out z values within system n
             between = tmp(maskmat==1); % put only between system z values in a variable
@@ -115,8 +135,8 @@ for sub = 1:numel(subs)
         end
         
         %% calculate segregation index by session across all networks (maybe exclude unassigned network (1))
-        seg_index_by_ses(sub,ses) = (mean(weighted_means_within) - mean(weighted_means_between))/mean(weighted_means_within);
-        seg_index_by_ses2(sub,ses) = (mean(within_corrs) - mean(between_corrs))/mean(within_corrs);
+        seg_index_by_ses(sub) = (mean(weighted_means_within) - mean(weighted_means_between))/mean(weighted_means_within);
+        seg_index_by_ses2(sub) = (mean(within_corrs) - mean(between_corrs))/mean(within_corrs);
         %network_z.within{sub,ses} = means_within; %put mean within system corrs in main structure
         %network_z.between{sub,ses} = means_between; %put mean between system corrs in main structure
         

@@ -19,9 +19,9 @@ clear all
 % ------------------------------------------------------------------------
 %% PATHS
 % ------------------------------------------------------------------------
-dataLoc = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Post-COVID/BIDS/derivatives/preproc_FCProc/corrmats_Seitzman300/';
+dataLoc = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/iNetworks/Nifti/FC_Parcels_333/';
 %dataLoc = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Segregation_analyses/iNetworks/Nifti/derivatives/preproc_FCProc/corrmats_Seitzman300/';
-output_dir = '/Users/dianaperez/Desktop/Research/Segregation_Analyses/';
+output_dir = '/Users/dianaperez/Desktop/';
 atlas_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Atlases/';
 atlas = 'Parcels333';
 atlas_params = atlas_parameters_GrattonLab(atlas,atlas_dir);% load atlas that contains roi info (including which rois belong to each network) 
@@ -34,10 +34,16 @@ weights = net_size./(num_rois-net_size(1));
 % ------------------------------------------------------------------------
 %% VARIABLES
 % ------------------------------------------------------------------------
-subs = {'LS02', 'LS03', 'LS05', 'LS08', 'LS11', 'LS14', 'LS16','LS17'};
-%subs = {'INET001','INET002', 'INET003','INET005','INET006','INET010','INET016','INET018','INET019','INET030'};
-sessions = [5, 5, 5, 5, 5, 5, 5, 5];
-%sessions = [4,4,4,4,4,4,4,4,4,4];
+%subs = {'LS02', 'LS03', 'LS05', 'LS08', 'LS11', 'LS14', 'LS16','LS17'};
+subs = {'INET001', 'INET002', 'INET003', 'INET005', 'INET006','INET010',...
+'INET018','INET019', 'INET026', 'INET030',  'INET032', 'INET033',...
+'INET034', 'INET035', 'INET036', 'INET038', 'INET039', 'INET040', 'INET041',...
+'INET042', 'INET043', 'INET044', 'INET045', 'INET046', 'INET047', 'INET048',...
+'INET049', 'INET050', 'INET051', 'INET052', 'INET053', 'INET055', 'INET056',...
+'INET057', 'INET058', 'INET059', 'INET060', 'INET061', 'INET062', 'INET063',...
+'INET065', 'INET067', 'INET068', 'INET069', 'INET070', 'INET071', 'INET072', 'INET073'}; %
+%sessions = [5, 5, 5, 5, 5, 5, 5, 5];
+sessions = 4;
 
 % ------------------------------------------------------------------------
 %% BEGIN ANALYSIS
@@ -49,10 +55,10 @@ for sub = 1:numel(subs)
     %sub_SI = [];
     clear subcorrmat
     clear mean_matrix
-    for ses = 1:sessions(sub)
-        fname = sprintf('%s/sub-%s/sub-%s_sess-%d_task-rest_corrmat_Seitzman300.mat', dataLoc, subs{sub}, subs{sub}, ses);
+    for ses = 1:sessions
+        fname = sprintf('%s/sub-%s_rest_ses-%d_parcel_corrmat.mat', dataLoc, subs{sub}, ses);
         mat_struct = load(fname);
-        matrix = mat_struct.corrmat; clear mat_struct
+        matrix = mat_struct.parcel_corrmat; clear mat_struct
         matrix = single(FisherTransform(matrix));% fisher transform r values
         sub_corrmat(ses,:,:,:) = matrix;
     end
@@ -62,7 +68,7 @@ for sub = 1:numel(subs)
         end
         clear sub_corrmat
         count = 1;
-        for net = 1:size(atlas_params.networks,1)
+        for net = 1:size(atlas_params.networks,2)
             if net == 1
                 rois = [count:net_size(net)];
             else
@@ -78,7 +84,7 @@ for sub = 1:numel(subs)
             all_within = [all_within; within];
             %all_within(net,ses) = all_within;
             
-            tmp_between = mean_matrix(rois(1):rois(end), 1:300); % all network correlations
+            tmp_between = mean_matrix(rois(1):rois(end), 1:333); % all network correlations
             maskmat = ones(size(tmp_between)); % mask out within-network correlations
             maskmat(:,rois(1):rois(end)) = 0; % mask out within-network correlations
             between = tmp_between(maskmat==1); %between-network correlations
