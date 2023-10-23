@@ -108,7 +108,9 @@ for sys = 1:numel(system_divisions)
             matched_data = datasample(masked_data,amt_data,2,'Replace', false);
             disp(sprintf('Total number of sample points for subject %s is %d by %d...', subjects{s}, size(matched_data,1), size(matched_data,2)))
             % ... calculate the correlation matrix...
-            corrmat_matched_data = paircorr_mod(matched_data');
+            systems_of_interest = matched_data(inds, :);
+            corrmat_matched_data = paircorr_mod(systems_of_interest');
+            %corrmat_matched_data = paircorr_mod(matched_data');
             % ... make it linear and store it in a variable...
             matcheddata_corrlin(count,:) = single(FisherTransform(corrmat_matched_data(maskmat)));
             % ... then onto the next session.
@@ -137,21 +139,25 @@ close('all');
 count = 1;
 within = [];
 between = [];
-for s = 1:numel(subject)
-    lines = [count:(count+sessions-1)];
+sub_averages = [];
+for s = 1:numel(subjects)
+    ses = sessions(s);
+    lines = [count:(count+ses-1)];
     sub_vals = simmat(lines,:);
-    maskmat = ones(sessions,sessions);
+    maskmat = ones(ses,ses);
     maskmat = logical(triu(maskmat, 1));
     within_sub = sub_vals(:,lines);
+    sub_averages(s,1) = mean(within_sub(maskmat==1));
     within = [within; within_sub(maskmat)];
     maskmat = ones(size(sub_vals));
     maskmat(:,lines) = 0;
+    sub_averages(s,2) = mean(sub_vals(maskmat==1));
     between = [between; sub_vals(maskmat==1)];
-    count = count+sessions;
+    count = count+ses;
 end
 
-disp(['The average similarity between subjects is ' mean(between)])
-disp(['The average similarity within subjects is ' mean(within)])
+disp(['The average similarity between subjects is ' num2str(mean(between))])
+disp(['The average similarity within subjects is ' num2str(mean(within))])
     
 end
 %% THE END
