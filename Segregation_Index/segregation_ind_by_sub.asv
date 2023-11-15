@@ -21,8 +21,8 @@ clear all
 % ------------------------------------------------------------------------
 dataset = 'lifespan';
 atlas = 'Parcels333';
-match_data = 1; % if 1, will calculate the minimum possible amount of data available and will force all subs to have that amount of data
-amt_data = 0; % if this is commented out or set to 0, then the script will calculate it
+match_data = 0; % if 1, will calculate the minimum possible amount of data available and will force all subs to have that amount of data
+amt_data = 988; % if this is commented out or set to 0, then the script will calculate it
 
 % ------------------------------------------------------------------------
 %% PATHS
@@ -66,7 +66,7 @@ if match_data
             for ses = 1:sessions
                 load([data_dir '/sub-' subject{sub} '_rest_ses-' num2str(ses) '_parcel_timecourse.mat'])
                 masked_data = parcel_time(logical(tmask_concat),:)';
-                allSubs_amtData(sub,ses) = size(masked_data,2);
+                allSubs_amtData = [allSubs_amtData; size(masked_data,2)];
                 if size(masked_data,2) < 800
                     disp(sprintf('subject %s session %d has %d data points', subject{sub}, ses, size(masked_data,2)))
                 end
@@ -135,8 +135,7 @@ for sub = 1:numel(subs)
 
     for net = 1:size(atlas_params.networks,2)
         if net == 1
-            count = net_size(net)+1;
-            continue;
+            rois = [count:net_size(net)];
         else
             rois = [count:(count-1) + net_size(net)]; %extract the rois belonging to system n
         end
@@ -154,7 +153,6 @@ for sub = 1:numel(subs)
         between = tmp_between(maskmat==1); %between-network correlations
         between(between<0) = 0;
         all_between = [all_between;between];
-        
         net_SI.unweighted(sub, net) = (mean(within)-mean(between))/mean(within);
         weight = net_size(net)/300;
         net_SI.weighted(sub,net) = ((mean(within)*weight)-(mean(between)*weight))/(mean(within)*weight);
@@ -164,5 +162,5 @@ for sub = 1:numel(subs)
     %% calculate the segregation index by network by session
     sub_SI(sub) = (mean(all_within) - mean(all_between))/mean(all_within);                      
 end
-save(sprintf('%s/%s_allsubs_seg_index_sub_matched.mat', output_dir, dataset), 'sub_SI', 'net_SI')
+save(sprintf('%s/%s_allsubs_seg_index_sub_matched.mat', output_dir, dataset), 'sub_SI')
 

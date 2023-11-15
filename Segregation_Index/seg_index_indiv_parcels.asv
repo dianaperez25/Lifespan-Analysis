@@ -233,7 +233,7 @@ for group = 1:numel(datasets)
         % add line to save the file
         outfile_fig = sprintf('%s/sub-%s_corrmat_indiv_parcels', out_dir, subs{sub});
         make_indparc_corrmat(sub_corrmat, atlas_params,-1,1)
-        saveas(gcf,[outfile_fig '.tiff'],'tiff');
+        saveas(gcf,[outfile_Fig '.tiff'],'tiff');
         close(gcf);
         %% calculate segregation index across all networks 
         %segregation index = (mean within system Z - mean between system Z)/mean within system Z
@@ -273,16 +273,23 @@ function make_indparc_corrmat(matrix, atlas_params, varargin)
 
 % information about networks and colors
 networks = {'DMN','Vis','FPN', 'DAN','VAN','Sal','CON','SMd','SMl','Aud','Tpole','MTL','PMN','PON'};
-%colors = [[1,0,0];[0,0,1];[0.9,0.9,0];[0,1,0];[0,0.5,0.5];[0,0,0];[0.5,0,0.5];[0,1,1];[1,0.5,0];[1,0,1];[1,0.758600000000000,0.517200000000000;0.600000000000000,0.600000000000000,1;1,0.400000000000000,0.400000000000000;0.500000000000000,0.500000000000000,0.500000000000000]];
+colors = [[1,0,0];;
 
 % open figure
 h = figure('Color',[0.8275 0.8275 0.8275],'Position',[56 143 1295 807]); %[56 143 1095 807]
 
 % plot out matrix
-
-climlow = -1;
-climhigh = 1;
-imagesc(matrix,[climlow climhigh]);
+if nargin>2
+    if ~isempty(varargin{1}) & ~isempty(varargin{2})
+        climlow = varargin{1};
+        climhigh = varargin{2};
+        imagesc(matrix,[climlow climhigh]);
+    else
+        imagesc(matrix);
+    end
+else
+    imagesc(matrix);
+end
 
 % My favorite colormap - edit if you want a different one
 load better_jet_colormap.mat; % assume this is in the same folder
@@ -305,12 +312,17 @@ set(gca,'YTicklabel','');
 tx= text(tickpos,ones(1,length(tickpos))*(14+1),networks);
 set(tx,'HorizontalAlignment','right','VerticalAlignment','top','Rotation',45);
 
+for i = 1:length(tx)
+     set(tx(i),'Color',[colors(i,1) colors(i,2) colors(i,3)],'FontName','Helvetica','FontSize',10,'FontWeight','bold');   
+end
 set(gca,'FontWeight','bold','FontSize',10);
 
-%original: -1*ones(1,length(tickpos)),tickpos-5
-ty= text(-.6*ones(1,length(tickpos)),tickpos,networks);
+ty= text(-1*ones(1,length(tickpos)),tickpos-5,networks);
 set(ty,'HorizontalAlignment','right','VerticalAlignment','top')
 
+for i = 1:length(ty)
+    set(ty(i),'Color',[colors(i,1) colors(i,2) colors(i,3)],'FontName','Helvetica','FontSize',10,'FontWeight','bold');   
+end
 colorbar;
 set(gca,'FontWeight','bold','FontSize',10);
 

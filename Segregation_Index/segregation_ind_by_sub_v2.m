@@ -1,4 +1,7 @@
 %% New Network Segregation Script
+
+%% THIS SCRIPT MATCHES DATA -NOT- AT THE SESSION LEVEL!!!
+
 % This script calculates a measure of system segregation (how much nodes in
 % a system communicate with each other vs with nodes in other systems).
 % Input: 300x300 functional connectivity correlation matrix.
@@ -19,10 +22,9 @@ clear all
 % ------------------------------------------------------------------------
 %% OPTIONS
 % ------------------------------------------------------------------------
-dataset = 'lifespan';
 atlas = 'Parcels333';
 match_data = 1; % if 1, will calculate the minimum possible amount of data available and will force all subs to have that amount of data
-amt_data = 0; % if this is commented out or set to 0, then the script will calculate it
+amt_data = 5926; % if this is commented out or set to 0, then the script will calculate it
 
 % ------------------------------------------------------------------------
 %% PATHS
@@ -36,8 +38,9 @@ atlas_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Atlases/';
 % ------------------------------------------------------------------------
 %% VARIABLES
 % ------------------------------------------------------------------------
-ls_subject = {'LS02', 'LS03', 'LS05', 'LS08', 'LS11', 'LS14', 'LS16','LS17'};
-inet_subject = {'INET003', 'INET005', 'INET006','INET010',...
+%ls_subject = {'LS02', 'LS03', 'LS05', 'LS08', 'LS11', 'LS14', 'LS16','LS17'};
+subject = {'LS02', 'LS03', 'LS05', 'LS08', 'LS11', 'LS14', 'LS16','LS17',...
+    'INET003', 'INET005', 'INET006','INET010',...
 'INET018','INET019', 'INET026', 'INET030',  'INET032', 'INET033',...
 'INET034', 'INET035', 'INET036', 'INET038', 'INET039', 'INET040', 'INET041',...
 'INET042', 'INET043', 'INET044', 'INET045', 'INET046', 'INET047', 'INET048',...
@@ -57,6 +60,7 @@ if match_data
         subject = [ls_subject inet_subject];
         allSubs_amtData = [];
         for sub = 1:numel(subject)
+            sub_data = 0;
             if contains(subject{sub}, 'LS')
                 sessions = ls_sessions;
             elseif contains(subject{sub}, 'INET')
@@ -66,29 +70,21 @@ if match_data
             for ses = 1:sessions
                 load([data_dir '/sub-' subject{sub} '_rest_ses-' num2str(ses) '_parcel_timecourse.mat'])
                 masked_data = parcel_time(logical(tmask_concat),:)';
-                allSubs_amtData(sub,ses) = size(masked_data,2);
+                sub_data = sub_data + size(masked_data,2);
                 if size(masked_data,2) < 800
                     disp(sprintf('subject %s session %d has %d data points', subject{sub}, ses, size(masked_data,2)))
                 end
             end
+            allSubs_amtData = [allSubs_amtData; sub_data];
         end
-        amt_data = min(min(allSubs_amtData));
+        amt_data = min(allSubs_amtData);
     end
 end
 
 % ------------------------------------------------------------------------
 %% BEGIN ANALYSIS
 % ------------------------------------------------------------------------
-% get correct subject and session info
-if strcmpi(dataset, 'lifespan')
-    subs = ls_subject;
-    sessions = ls_sessions;
-elseif strcmpi(dataset, 'inetworks')
-    subs = inet_subject;
-    sessions = inet_sessions;
-else
-    error('Invalid Dataset: please select either lifespan or inetworks')
-end
+
 
 % get atlas information
 atlas_params = atlas_parameters_GrattonLab(atlas,atlas_dir);% load atlas that contains roi info (including which rois belong to each network) 
@@ -100,37 +96,44 @@ weights = net_size./(num_parcs-net_size(1));
 
 % begin segregation analysis calculations
 net_SI = {};
-for sub = 1:numel(subs)
+for sub = 1:numel(subject)
+    if contains(subject{sub}, 'LS')
+        sessions = ls_sessions;
+    elseif contains(subject{sub}, 'INET')
+        sessions = inet_sessions;
+    else error('Invalid subject ID');
+    end
     sub_struct = {};
     all_within = [];
     all_between = [];
 
     clear subcorrmat mean_matrix
-
+    concat_data = [];
     for ses = 1:sessions
-        fname = sprintf('%s/sub-%s_rest_ses-%d_parcel_timecourse.mat', data_dir, subs{sub}, ses);
+        fname = sprintf('%s/sub-%s_rest_ses-%d_parcel_timecourse.mat', data_dir, subject{sub}, ses);
         timecourse_struct = load(fname);
         masked_data = timecourse_struct.parcel_time(logical(timecourse_struct.tmask_concat), :)';
         sorted_data = masked_data(atlas_params.sorti, :);
         clear timecourse_struct
-
-        % ... match amount of data ...
-        if match_data == 0 %if we don't care about matching data, then use the max amount of data available per subject/session
-            amt_data = size(sorted_data,2);
-        end
-        matched_data = datasample(sorted_data,amt_data,2,'Replace', false);
-
-        % ... calculate the correlation matrix ...
-        matrix_sorted = paircorr_mod(matched_data');
-        matrix_sorted = single(FisherTransform(matrix_sorted));% fisher transform r values
-        sub_corrmat(ses,:,:,:) = matrix_sorted;
+        concat_data = [concat_data sorted_data];
     end
+
+    % ... match amount of data ...
+    if match_data == 0 %if we don't care about matching data, then use the max amount of data available per subject/session
+        amt_data = size(sorted_data,2);
+    end
+    matched_data = concat_data(:,1:amt_data);
+
+    % ... calculate the correlation matrix ...
+    matrix_sorted = paircorr_mod(matched_data');
+    matrix_sorted = single(FisherTransform(matrix_sorted));% fisher transform r values
+    %sub_corrmat(ses,:,:,:) = matrix_sorted;
     
-    mean_matrix(1,:,:,:) = squeeze(mean(sub_corrmat));
-    if ndims(mean_matrix)>2
-        mean_matrix = squeeze(mean_matrix);
+    %mean_matrix(1,:,:,:) = squeeze(mean(sub_corrmat));
+    if ndims(matrix_sorted)>2
+        matrix_sorted = squeeze(matrix_sorted);
     end
-    clear sub_corrmat 
+    %clear sub_corrmat 
     count = 1;
 
     for net = 1:size(atlas_params.networks,2)
@@ -141,14 +144,14 @@ for sub = 1:numel(subs)
             rois = [count:(count-1) + net_size(net)]; %extract the rois belonging to system n
         end
         
-        tmp_within = mean_matrix(rois,rois); % within-network correlations
+        tmp_within = matrix_sorted(rois,rois); % within-network correlations
         maskmat = ones(size(tmp_within));
         maskmat = logical(triu(maskmat,1));
         within = tmp_within(maskmat);
         within(within<0) = 0;
         all_within = [all_within; within];
         
-        tmp_between = mean_matrix(rois(1):rois(end), 1:num_parcs); % all network correlations
+        tmp_between = matrix_sorted(rois(1):rois(end), 1:num_parcs); % all network correlations
         maskmat = logical(ones(size(tmp_between))); % mask out within-network correlations
         maskmat(:,rois(1):rois(end)) = 0; % mask out within-network correlations
         between = tmp_between(maskmat==1); %between-network correlations
