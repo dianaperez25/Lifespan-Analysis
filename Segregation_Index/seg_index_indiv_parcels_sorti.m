@@ -22,6 +22,9 @@
 % z-value of all nodes of that system to each other. 
 % Between-system connectivity was calculated as the mean node-to-node 
 % z-value between each node of a system and all nodes of all other systems. 
+
+% 11/28/23 - DP: adding some code to sort ses-specific timecourses for inet
+% subs
 % ------------------------------------------------------------------------
 
 clear all
@@ -43,7 +46,7 @@ end
 %% OPTIONS
 % ------------------------------------------------------------------------
 match_data = 1; % if 1, will calculate the minimum possible amount of data available and will force all subs to have that amount of data
-amt_data = 0; % if this is commented out or set to 0, then the script will calculate it
+amt_data = 1021; % if this is commented out or set to 0, then the script will calculate it
 atlas = 'Seitzman300';
 datasets = {'lifespan', 'inetworks'}; %'lifespan', 'inetworks'
 
@@ -74,15 +77,20 @@ if match_data
         allSubs_amtData = [];
         for sub = 1:numel(subjects)            
             for ses = 1:10
-                fname = [parcel_timecourse_dir '/sub-' subjects{sub} '_rest_ses-' num2str(ses) '_parcel_timecourse.mat'];
-                if exist(fname)
-                    load(fname)
-                    masked_data = parcel_time(logical(tmask_concat),:)';
-                    allSubs_amtData(sub,ses) = size(masked_data,2);
-                    if size(masked_data,2) < 800
-                        disp(sprintf('subject %s session %d has %d data points', subjects{sub}, ses, size(masked_data,2)))
+                %if contains(subjects{sub}, 'LS')
+                    fname = [parcel_timecourse_dir '/sub-' subjects{sub} '_ses-' num2str(ses) '_indiv_parcels_timseries_sorted.mat'];
+                    if exist(fname)
+                        load(fname)
+                        allSubs_amtData(sub,ses) = size(ses_tseries,2); clear ses_tseries
+                    else continue;
                     end
-                end
+                %elseif contains(subjects{sub}, 'INET')
+                    %fname = [parcel_timecourse_dir '/sub-' subjects{sub} '_ses-' num2str(ses) '_individual_parcels_timecourse.mat'];
+                    %if exist(fname)
+                        %load(fname)
+                        %allSubs_amtData(sub,ses) = size(avg_parc_ts,2); clear avg_parc_ts
+                    %end
+                %end                
             end
         end
         amt_data = min(min(allSubs_amtData));
@@ -101,10 +109,13 @@ for group = 1:numel(datasets)
     if strcmpi(datasets{group}, 'lifespan')
         inds = find(contains(subjects, 'LS'));
         subs = subjects(inds);
+        sort = 0;
     elseif strcmpi(datasets{group}, 'inetworks')
         inds = find(contains(subjects, 'INET'));
         subs = subjects(inds);
+        sort = 0;
     end
+    
     for sub = 1:numel(subs)
     
         % initialize a couple variables
@@ -124,24 +135,17 @@ for group = 1:numel(datasets)
         consec_parc_map = zeros(size(parcel_map.data));    
         for parc = 1:length(unique_IDs)
             consec_parc_map(find(parcel_map.data==unique_IDs(parc))) = parc;
-        end
-
-        %load parcels average timecourse; these have already been masked 
-        parcel_tc_fname = sprintf('%s/sub-%s_individual_parcels_average_timecourses.mat', parcel_timecourse_dir, subs{sub});
-        mat_struct = load(parcel_tc_fname);
-
-        %load network map to obtain network assignments
+        end        %load network map to obtain network assignments
         netmap_fname = sprintf('%s/sub-%s/sub-%s_indiv_parcels_net_assigned_binarized.dtseries.nii', network_map_dir, subs{sub}, subs{sub});
         netmap = ft_read_cifti_mod(netmap_fname);
 
-        %% Sort parcels by network
         % get unique network IDs
         unique_net_IDs = unique(netmap.data);
         if unique_net_IDs(1) == 0
             unique_net_IDs(1) = []; %but delete the 0
         end
-
-        % now iterate across networks...
+        
+            % now iterate across networks...
         for net = 1:length(unique_net_IDs)
             % ...to find the parcels that are assigned to each network...
             net_size(net,1) = unique_net_IDs(net); 
@@ -151,18 +155,37 @@ for group = 1:numel(datasets)
             net_size(net,3) = length(net_verts); % ...and also get the size of each network in number of vertices...
             parcels_sorted = [parcels_sorted; net_parcels]; %...now add the parcel IDs for this network to a structure...
         end
-
+            
         total_num_parcels = length(parcels_sorted); %...the total number of parcels for this subject...
-        parc_tc_sorted = mat_struct.avg_parc_ts(parcels_sorted,:); %...now sorting the timeseries information for the parcels by network...
-
-        % ... match the amount of data ...
-        if match_data == 0 %if we don't care about matching data, then use the max amount of data available per subject/session
-            amt_data = size(parc_tc_sorted,2);
+        
+        data_concat = [];
+        for ses = 1:5
+            %load parcels average timecourse; these have already been masked 
+            parcel_tc_fname = sprintf('%s/sub-%s_ses-%d_indiv_parcels_timseries_sorted.mat', parcel_timecourse_dir, subs{sub},ses);
+            if exist(parcel_tc_fname)
+                mat_struct = load(parcel_tc_fname);
+            else continue;
+            end
+            if sort == 1
+                parc_tc_sorted = mat_struct.ses_tseries(parcels_sorted,:); %...now sorting the timeseries information for the parcels by network...
+            else
+                parc_tc_sorted = mat_struct.ses_tseries;
+            end
+            clear mat_struct
+            % ... match the amount of data ...
+            if match_data == 0 %if we don't care about matching data, then use the max amount of data available per subject/session
+                amt_data = size(parc_tc_sorted,2);
+            end
+            if size(parc_tc_sorted,2)<amt_data
+                continue;
+            else
+                matched_data = parc_tc_sorted(:,1:amt_data);
+                data_concat = [data_concat matched_data];
+            end
         end
-        matched_data = parc_tc_sorted(:,1:amt_data);
 
         % ... calculate person correlation ...
-        matrix_sorted = single(FisherTransform(paircorr_mod(matched_data')));% fisher transform r values
+        matrix_sorted = single(FisherTransform(paircorr_mod(data_concat')));% fisher transform r values
 
         count = 1; % start a count
 

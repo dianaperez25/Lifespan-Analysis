@@ -1,9 +1,9 @@
 %% SEGREGATION INDEX CALCULATION
-% This script calculates a measure of system segregation for individualized parcels.
+% This script calculates a measure of system segregation for group parcels.
 
 % Inputs: 
-    %   individualized parcellation, 
-    %   individualized parcels timeseries 
+    %   group parcellation file per subject, 
+    %   parcel timeseries per subject
     %   parcel network assignment
 % Outputs: 
     %   mean within-system correlation 
@@ -12,7 +12,7 @@
     %   segregation index per subject
     %   (detailed explanation of outputs at the end of the script)
     
-% Based on the analysis describe in: 
+% Based on the analysis described in: 
 % Chan, Micaela Y., et al. "Decreased segregation of brain systems across 
 % the healthy adult lifespan." Proceedings of the National Academy of 
 % Sciences 111.46 (2014): E4997-E5006.
@@ -30,8 +30,8 @@ clear all
 %% PATHS
 % ------------------------------------------------------------------------
 root_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/parcellations/';
-parcel_timecourse_dir = [root_dir 'Gordon_Parcellation/avg_timecourses/'];
-network_map_dir = [root_dir 'Gordon_Parcellation/'];
+parcel_timecourse_dir = [root_dir 'FC_Parcels_333/'];
+%network_map_dir = [root_dir 'Gordon_Parcellation/'];
 atlas_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Atlases/';
 out_dir = '/Users/dianaperez/Desktop/ohbm_poster/';
 
@@ -43,9 +43,9 @@ end
 %% OPTIONS
 % ------------------------------------------------------------------------
 match_data = 1; % if 1, will calculate the minimum possible amount of data available and will force all subs to have that amount of data
-amt_data = 0; % if this is commented out or set to 0, then the script will calculate it
-atlas = 'Seitzman300';
-datasets = {'lifespan', 'inetworks'}; %'lifespan', 'inetworks'
+amt_data = 1021; % if this is commented out or set to 0, then the script will calculate it
+atlas = 'Parcels333';
+datasets = {'lifespan','inetworks'}; % 
 
 % ------------------------------------------------------------------------
 %% VARIABLES
@@ -62,7 +62,8 @@ subjects = {'LS02', 'LS03', 'LS05', 'LS08', 'LS11', 'LS14', 'LS16', 'LS17',...
 
 % load atlas information
 atlas_params = atlas_parameters_GrattonLab(atlas, atlas_dir);%[root_dir 'Atlases']);%
-network_z.networks = atlas_params.networks(2:end); %copy names of each network
+% edit atlas_params slightly to delete unassigned
+atlas_params.networks = {'DMN','Vis','FPN', 'DAN','VAN','Sal','CON','SMd','SMl','Aud','PERN','RetroSpl'};
 
 % ------------------------------------------------------------------------
 %% DATA MATCHING
@@ -71,17 +72,21 @@ if match_data
     if amt_data == 0 || ~exist('amt_data')
         allSubs_amtData = [];
         % get minimum amt of data per session
+        subject = [ls_subject inet_subject];
         allSubs_amtData = [];
-        for sub = 1:numel(subjects)            
-            for ses = 1:10
-                fname = [parcel_timecourse_dir '/sub-' subjects{sub} '_rest_ses-' num2str(ses) '_parcel_timecourse.mat'];
-                if exist(fname)
-                    load(fname)
-                    masked_data = parcel_time(logical(tmask_concat),:)';
-                    allSubs_amtData(sub,ses) = size(masked_data,2);
-                    if size(masked_data,2) < 800
-                        disp(sprintf('subject %s session %d has %d data points', subjects{sub}, ses, size(masked_data,2)))
-                    end
+        for sub = 1:numel(subject)
+            if contains(subject{sub}, 'LS')
+                sessions = 5;
+            elseif contains(subject{sub}, 'INET')
+                sessions = 4;
+            else error('Invalid subject ID');
+            end
+            for ses = 1:sessions
+                load([data_dir '/sub-' subject{sub} '_rest_ses-' num2str(ses) '_parcel_timecourse.mat'])
+                masked_data = parcel_time(logical(tmask_concat),:)';
+                allSubs_amtData = [allSubs_amtData; size(masked_data,2)];
+                if size(masked_data,2) < 800
+                    disp(sprintf('subject %s session %d has %d data points', subject{sub}, ses, size(masked_data,2)))
                 end
             end
         end
@@ -101,83 +106,57 @@ for group = 1:numel(datasets)
     if strcmpi(datasets{group}, 'lifespan')
         inds = find(contains(subjects, 'LS'));
         subs = subjects(inds);
+        ses = 5;
     elseif strcmpi(datasets{group}, 'inetworks')
         inds = find(contains(subjects, 'INET'));
         subs = subjects(inds);
+        ses = 4;
     end
+    
     for sub = 1:numel(subs)
     
         % initialize a couple variables
-        net_size = []; parcels_sorted = []; sub_struct = {}; sub_within_corrs = []; sub_between_corrs = [];
+        sub_struct = {}; sub_within_corrs = []; sub_between_corrs = [];
 
-        % load cifti with individual parcels
-        parcel_fname = sprintf('%s/sub-%s/sub-%s_individual_parcels_edgethresh_0.5.dtseries.nii', network_map_dir, subs{sub}, subs{sub});
-        parcel_map = ft_read_cifti_mod(parcel_fname);
-
-        % get unique parcel IDs
-        unique_IDs = unique(parcel_map.data);
-        if unique_IDs(1)==0
-            unique_IDs(1)=[]; %delete parcels equal to 0
+        timecourse_concat = [];
+        
+        for s = 1:ses
+            %load parcels average timecourse; these have already been masked 
+            parcel_tc_fname = sprintf('%s/sub-%s_rest_ses-%d_parcel_timecourse.mat', parcel_timecourse_dir, subs{sub}, s);
+            mat_struct = load(parcel_tc_fname);
+            timecourse_masked = mat_struct.parcel_time(logical(mat_struct.tmask_concat'),:)';
+            % ... match the amount of data ...
+            if match_data == 0 %if we don't care about matching data, then use the max amount of data available per subject/session
+                amt_data = size(timecourse_concat,2);
+            end
+            if size(timecourse_masked,2)<amt_data
+                continue;
+            else
+                matched_data = timecourse_masked(:,1:amt_data);
+                timecourse_concat = [timecourse_concat matched_data];
+            end
         end
-
-        % parcel IDs are not consecutive; making consecutive here 
-        consec_parc_map = zeros(size(parcel_map.data));    
-        for parc = 1:length(unique_IDs)
-            consec_parc_map(find(parcel_map.data==unique_IDs(parc))) = parc;
-        end
-
-        %load parcels average timecourse; these have already been masked 
-        parcel_tc_fname = sprintf('%s/sub-%s_individual_parcels_average_timecourses.mat', parcel_timecourse_dir, subs{sub});
-        mat_struct = load(parcel_tc_fname);
-
-        %load network map to obtain network assignments
-        netmap_fname = sprintf('%s/sub-%s/sub-%s_indiv_parcels_net_assigned_binarized.dtseries.nii', network_map_dir, subs{sub}, subs{sub});
-        netmap = ft_read_cifti_mod(netmap_fname);
 
         %% Sort parcels by network
-        % get unique network IDs
-        unique_net_IDs = unique(netmap.data);
-        if unique_net_IDs(1) == 0
-            unique_net_IDs(1) = []; %but delete the 0
-        end
+        %parc_tc_sorted = timecourse_concat(atlas_params.sorti,:);
 
-        % now iterate across networks...
-        for net = 1:length(unique_net_IDs)
-            % ...to find the parcels that are assigned to each network...
-            net_size(net,1) = unique_net_IDs(net); 
-            net_verts = find(netmap.data==unique_net_IDs(net)); %...now get indices for the vertices assigned to each network...
-            net_parcels = unique(consec_parc_map(net_verts)); %...and get the parcel ID's that correspond to those vertices...
-            net_size(net,2) = length(net_parcels); %...get the size of the network in number of parcels...
-            net_size(net,3) = length(net_verts); % ...and also get the size of each network in number of vertices...
-            parcels_sorted = [parcels_sorted; net_parcels]; %...now add the parcel IDs for this network to a structure...
-        end
-
-        total_num_parcels = length(parcels_sorted); %...the total number of parcels for this subject...
-        parc_tc_sorted = mat_struct.avg_parc_ts(parcels_sorted,:); %...now sorting the timeseries information for the parcels by network...
-
-        % ... match the amount of data ...
-        if match_data == 0 %if we don't care about matching data, then use the max amount of data available per subject/session
-            amt_data = size(parc_tc_sorted,2);
-        end
-        matched_data = parc_tc_sorted(:,1:amt_data);
+        
 
         % ... calculate person correlation ...
-        matrix_sorted = single(FisherTransform(paircorr_mod(matched_data')));% fisher transform r values
-
-        count = 1; % start a count
-
-        for net = 1:size(net_size,1) % iterate through each network
-            % ...extract the parcels belonging to system net...
-            net_parcels_all{net} = count:(count+net_size(net,2)-1); % put them all in a structure so that we can use them later             
-            net_parcels = net_parcels_all{net}; % putting the cell array in a matrix so that we can use them now
-            weights(sub,net) = net_size(net,2)/length(parcels_sorted); % calculate weights based on the size of the network
+        matrix = single(FisherTransform(paircorr_mod(matched_data')));% fisher transform r values
+        net_size = [];
+        for net = 1:length(atlas_params.networks) % iterate through each network            
+            % ...extract the parcels belonging to system net...                
+            net_parcels = atlas_params.mods{net+1}; % putting the cell array in a matrix so that we can use them now
+            net_size(sub,net) = length(net_parcels);
+            weights(sub,net) = length(net_parcels)/atlas_params.num_rois; % calculate weights based on the size of the network
 
             %% ...GET WITHIN-SYSTEM CORRELATIONS...
             % a temporary matrix with correlation values within system net
-            tmp = matrix_sorted(net_parcels(1):net_parcels(end),net_parcels(1):net_parcels(end)); 
+            tmp = matrix(net_parcels,net_parcels); 
 
             %make a mask to only keep correlation values in upper triangle
-            maskmat = ones(net_size(net,2)); 
+            maskmat = ones(length(net_parcels)); 
             maskmat = logical(triu(maskmat,1));
             within = tmp(maskmat); % mask out values in lower triangle
             within(within<0) = 0; % set negative z values to 0  
@@ -189,10 +168,10 @@ for group = 1:numel(datasets)
 
             %% ...GET BETWEEN SYSTEM CORRELATIONS...
             % a temporary matrix with z values for network net
-            tmp = matrix_sorted(net_parcels(1):net_parcels(end), 1:total_num_parcels);
+            tmp = matrix(net_parcels, 1:atlas_params.num_rois);
             % make a mask the same size of tmp
             maskmat = ones(size(tmp)); 
-            maskmat(:,net_parcels(1):net_parcels(end)) = 0; % mask out z values within system net
+            maskmat(:,net_parcels) = 0; % mask out z values within system net
             between = tmp(maskmat==1); % put only between system z values in a variable
             between(between<0) = 0;% set negative z values to 0
 
@@ -203,27 +182,25 @@ for group = 1:numel(datasets)
             clear maskmat between within
 
             %% ...CALCULATE SEGREGATION FOR THIS NETWORK...
-            segregation_by_net(sub,net) = (withinFC_by_net(sub,net) - betweenFC_by_net(sub,net))/withinFC_by_net(sub,net);
-            count = count + net_size(net,2);
+            segregation_by_net(sub,net) = (withinFC_by_net(sub,net) - betweenFC_by_net(sub,net))/withinFC_by_net(sub,net);                
         end
         
-        for net = 1:size(net_size,1) % iterate through each network again
+        for net = 1:length(atlas_params.networks) % iterate through each network again
             % get correlation with network net and every other network
-            net_parcels = net_parcels_all{net}; 
-            tmp = matrix_sorted(net_parcels(1):net_parcels(end), 1:total_num_parcels);
-            for net2 = 1:size(net_size,1)
-                net2_parcels = net_parcels_all{net2};            
+            net_parcels = atlas_params.mods{net+1};
+            tmp = matrix(net_parcels, 1:atlas_params.num_rois);
+            for net2 = 1:length(atlas_params.networks)
+                net2_parcels = atlas_params.mods{net2+1};            
                 maskmat = zeros(size(tmp)); %create another mask the size of tmp
-                maskmat(:,net2_parcels(1):net2_parcels(end)) = 1; % extract z values between net and net2
+                maskmat(:,net2_parcels) = 1; % extract z values between net and net2
                 FC = tmp(maskmat==1); 
                 sub_corrmat(net,net2) = mean(FC); % put these in a matrix
             end
         end
         corrmats(sub,:,:,:) = sub_corrmat; % put the sub corrmat in a structure with all other subjects
-        %% create an image with those correlations
-        %% STILL NEED TO TEST THIS FUNCTION
-        % add line to save the file
-        outfile_fig = sprintf('%s/sub-%s_corrmat_indiv_parcels', out_dir, subs{sub});
+        
+        % create an image with those correlations
+        outfile_fig = sprintf('%s/sub-%s_corrmat_group_parcels', out_dir, subs{sub});
         make_indparc_corrmat(sub_corrmat)
         saveas(gcf,[outfile_fig '.tiff'],'tiff');
         close(gcf);
@@ -243,9 +220,8 @@ for group = 1:numel(datasets)
 
         clear sub_within_corrs sub_between_corrs sub_corrmat
 
-        outfile_sub = sprintf('%s/sub-%s_segregation_index_indiv_parcels.mat', out_dir, subs{sub});
+        outfile_sub = sprintf('%s/sub-%s_segregation_index_group_parcels.mat', out_dir, subs{sub});
         save(outfile_sub, 'sub_struct');
-        count = count + net_size(net,2);
     end
     group_struct.averages = segregation_by_sub;
     group_struct.networks.withinFC = withinFC_by_net;
@@ -253,10 +229,10 @@ for group = 1:numel(datasets)
     group_struct.networks.segregation = segregation_by_net;
     group_struct.corrmats.subjects = corrmats;
     group_struct.corrmats.average = squeeze(mean(corrmats(:,:,:,:),1));
-    outfile_group = sprintf('%s/group_%s_segregation_index_indiv_parcels.mat', out_dir, datasets{group});
+    outfile_group = sprintf('%s/group_%s_segregation_index_group_parcels_v2.mat', out_dir, datasets{group});
     save(outfile_group, 'group_struct');
     
-    outfile_fig = sprintf('%s/group_%s_corrmat_indiv_parcels', out_dir, datasets{group});
+    outfile_fig = sprintf('%s/group_%s_corrmat_group_parcels', out_dir, datasets{group});
     make_indparc_corrmat(squeeze(mean(corrmats(:,:,:,:),1)))
     saveas(gcf,[outfile_fig '.tiff'],'tiff');
     close(gcf);
@@ -265,7 +241,7 @@ end
 function make_indparc_corrmat(matrix)
 
 % information about networks and colors
-networks = {'DMN','Vis','FPN', 'DAN','VAN','Sal','CON','SMd','SMl','Aud','Tpole','MTL','PMN','PON'};
+networks = {'DMN','Vis','FPN', 'DAN','VAN','Sal','CON','SMd','SMl','Aud','PERN','RetroSpl'};
 
 % open figure
 h = figure('Color',[0.8275 0.8275 0.8275],'Position',[56 143 1295 807]); %[56 143 1095 807]
@@ -280,9 +256,9 @@ load better_jet_colormap.mat; % assume this is in the same folder
 colormap(better_jet_colormap_diff);
 
 % put lines between the networks
-vline_new([1:14]+.5,'k',3);
-hline_new([1:14]+.5,'k',3);
-tickpos = 1:14;
+vline_new([1:12]+.5,'k',3);
+hline_new([1:12]+.5,'k',3);
+tickpos = 1:12;
 ax = axis;
 
 % put ticks in the right places
@@ -293,7 +269,7 @@ set(gca,'XTicklabel','');
 set(gca,'YTicklabel','');    
 
 % label the networks on the two axes
-tx= text(tickpos,ones(1,length(tickpos))*(14+1),networks);
+tx= text(tickpos,ones(1,length(tickpos))*(12+1),networks);
 set(tx,'HorizontalAlignment','right','VerticalAlignment','top','Rotation',45);
 set(tx,'Color',[0,0,0],'FontName','Helvetica','FontSize',10,'FontWeight','bold');   
 set(gca,'FontWeight','bold','FontSize',10);
