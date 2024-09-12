@@ -9,15 +9,17 @@ function seg_index_reliability(subject, neg_corrs, data_dir, atlas, output_str, 
 
 %% withinFC and betweenFC data is not saving right. I think I need to clear the variable after each sub
 %clear all
-addpath(genpath('/projects/b1081/Scripts/CIFTI_RELATED/'))
-addpath(genpath('/scratch/dcr8536'))
+addpath(genpath('/Users/dianaperez/Documents/Resources/'))
+addpath(genpath('/Users/dianaperez/Documents/GitHub/GrattonLab-General-Repo/'))
+addpath(genpath('/Users/dianaperez/Documents/GitHub/Lifespan-Analysis/'))
+
 %% PATHS
 %data_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Post-COVID/BIDS/derivatives/postFCproc_CIFTI/FC_Parcels_333/';
 %data_dir = '/scratch/dcr8536/TimeB/Nifti/postFCproc_CIFTI/FC_Parcels_333/';
 %subject = {'LS02', 'LS03', 'LS05', 'LS08', 'LS11', 'LS14', 'LS16', 'LS17'};%, 'INET001','INET002', 'INET003','INET005','INET006','INET010','INET016','INET018','INET019','INET030'};
 output_dir = '/scratch/dcr8536/seg_index/';
 %output_str = 'neg_corrs_deleted'; %something to add to the filename for the output figures to differentiate it from others?
-atlas_dir = '/projects/b1081/Atlases/';
+atlas_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Atlases/';
 %atlas = 'Parcels333';
 atlas_params = atlas_parameters_GrattonLab(atlas,atlas_dir);% load atlas that contains roi info (including which rois belong to each network) 
 

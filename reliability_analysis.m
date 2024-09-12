@@ -1,100 +1,123 @@
-%% Script for Reliability Analysis
+%% Script for Reliability of rs-FC Analysis
 
 clear all
 
 %% PATHS
+data_dir = '/Volumes/Back_Up/Dissertation/Lifespan/derivatives/postFCproc_CIFTI/FC_Parcels_333';
+output_dir = '/Volumes/Back_Up/Dissertation/Reliability_Analyses';
 
-%dataDir = '/projects/b1081/Lifespan/derivatives/preproc_FCProc/corrmats_Seitzman300/';
-%dataDir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Post-COVID/BIDS/derivatives/preproc_FCProc/corrmats_Seitzman300/';
-dataDir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/iNetworks/Nifti/FC_Parcels_333/';
-%dataDir = '/scratch/dcr8536/FC_Parcels_333/';
-%output_dir = '/scratch/dcr8536/reliability/Parcels_333/';
-output_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Diana/reliability/';
+%% OPTIONS
+dataset = 'Lifespan'; %'iNet' or 'Lifespan'
+% How many points to sample for "true" half
+pts2sample = 3808; %3808 -> ~70 min, 5454 -> ~100 min, 8181 -> ~150 min
+% How much data to add at each step
+samp_step = 136;% 136 -? ~2.5 min, 272 -> ~5 min, will add this number of frames each time it subsamples data
+% How many iterations to run
+iterations = 1;%000;
+
 %% VARIABLES
-subject = {'LS02', 'LS03', 'LS05', 'LS08', 'LS11', 'LS14', 'LS16', 'LS17'};
-subject = {'INET001', 'INET002', 'INET003', 'INET005', 'INET006','INET010',...
-'INET018','INET019', 'INET026', 'INET030',  'INET032', 'INET033',...
-'INET034', 'INET035', 'INET036', 'INET038', 'INET039', 'INET040', 'INET041',...
-'INET042', 'INET043', 'INET044', 'INET045', 'INET046', 'INET047', 'INET048',...
-'INET049', 'INET050', 'INET051', 'INET052', 'INET053', 'INET055', 'INET056',...
-'INET057', 'INET058', 'INET059', 'INET060', 'INET061', 'INET062', 'INET063',...
-'INET065', 'INET067', 'INET068', 'INET069', 'INET070', 'INET071', 'INET072', 'INET073'}; %
-sessions = 5;
-%runs = [9,9,11,8,9;8,8,8,9,9];
 
-%subject = {'INET001','INET002', 'INET003','INET005','INET006','INET010','INET016','INET018','INET019','INET030'};
-%sessions = 4;
-%% How many points to sample for "true" half
-%pts2sample = 8181; %8181 roughly equivalent to 150 minutes
-%pts2sample = 5454; %number of frames to sample for true half;roughly equals 100 minutes
-pts2sample = 3808; %~70 minutes
-%% How much data to add at each step
-%sampStep=272; %5 minutes, will add this number of frames each time it subsamples data
-sampStep=136;% roughly 2.5 mins -- 272 = 5 minutes, will add this number of frames each time it subsamples data
-%% How many iterations to run
-iterations = 1000;
-%rgb colors for plotting results
-rgb_colors = [1 0 0;%LS02
-            0, 1, 0;%LS03
-            0, 0, 1;%LS05
-            0, 1, 1;%LS08
-            1, 0, 1;%LS11
-            0.4660 0.6740 0.188;%LS14
-            0.9290 0.6940 0.1250;%LS16
-            0.4940 0.1840 0.5560];%LS17
-%rgb_colors = {'#808080', '#594D5B', '#C5C6D0', '#7F7D9C', '#9897A9', '#787276', '#7C6E7F', '#564C4D', '#696880', '#4D4C5C'}; % different shades of grey
+if strcmpi(dataset, 'Lifespan')
+    subject = {'LS02', 'LS03', 'LS05', 'LS08', 'LS11', 'LS14', 'LS16', 'LS17'}; %
+    sessions = 5;
+    %rgb colors for plotting results
+    rgb_colors = [1 0 0;%LS02
+                0, 1, 0;%LS03
+                0, 0, 1;%LS05
+                0, 1, 1;%LS08
+                1, 0, 1;%LS11
+                0.4660 0.6740 0.188;%LS14
+                0.9290 0.6940 0.1250;%LS16
+                0.4940 0.1840 0.5560];%LS17
+elseif strcmpi(dataset, 'iNet')
+    subject = {'INET001', 'INET002', 'INET003', 'INET005', 'INET006','INET010',...
+    'INET018','INET019', 'INET026', 'INET030',  'INET032', 'INET033',...
+    'INET034', 'INET035', 'INET036', 'INET038', 'INET039', 'INET040', 'INET041',...
+    'INET042', 'INET043', 'INET044', 'INET045', 'INET046', 'INET047', 'INET048',...
+    'INET049', 'INET050', 'INET051', 'INET052', 'INET053', 'INET055', 'INET056',...
+    'INET057', 'INET058', 'INET059', 'INET060', 'INET061', 'INET062', 'INET063',...
+    'INET065', 'INET067', 'INET068', 'INET069', 'INET070', 'INET071', 'INET072', 'INET073'}; %
+    sessions = 4;
+end
         
 for sub = 1:numel(subject)    
-    catData = [];
-    catTmask = [];    
+    
+    data_struct = cell(1,sessions);
+    num_pts = 0;
+
     for i = 1:sessions        
         %load mat file
-        load([dataDir '/sub-' subject{sub} '_rest_ses-' num2str(i) '_parcel_timecourse.mat'])
+        FC_fname = [data_dir '/sub-' subject{sub} '_rest_ses-' num2str(i) '_parcel_timecourse.mat'];
+        if exist(FC_fname)
+            load(FC_fname)
+            masked_data = parcel_time(logical(tmask_concat'),:);
+            data_struct{i} = masked_data';
+            num_pts = num_pts + size(masked_data,1);
+        end
         %apply tmask
-        masked_data = parcel_time(logical(tmask_concat'),:);
+        %masked_data = parcel_time(logical(tmask_concat'),:);
         %concatenate data
-        catData = [catData masked_data'];
+        %cat_data = [cat_data masked_data'];
+        
         %catTmask = [catTmask tmask_concat'];
     end
 
-    disp(sprintf('Total number of sample points for subject %s is %d by %d...', subject{sub}, size(catData,1), size(catData,2)))
+    disp(sprintf('Total number of sample points for subject %s is %d...', subject{sub}, num_pts))
     
-    indices = [1:1:size(catData,2)]; % create a matrix of indices for each data point
-    num_sets = floor((length(indices))/sampStep); % calculate how many chunks of data are possible given the total number of data points
+    indices = [1:1:num_pts]; % create a matrix of indices for each data point
+    num_sets = floor((length(indices))/samp_step); % calculate how many chunks of data are possible given the total number of data points
     clear indices
     count = 1; 
+    
     % create a matrix with indices for data points belonging to each chunk
     % of data. Each row corresponds to a chunk of sampStep data points
     for set = 1:num_sets
-        indices_for_data(set,:) = count:(count+sampStep-1);
-        count = count + sampStep;
+        indices_for_data(set,:) = count:(count+samp_step-1);
+        count = count + samp_step;
     end
     
     for p = 1:iterations
-        rng('shuffle');    
+        % randomize order of sessions
+        rng('shuffle');
+        ses_ind = randperm(sessions);
+    
+        % concatenate data for all sessions in random order - note, the order
+        % of the runs stays the same
+        cat_data = zeros(1,num_pts);
+        first = 1;
+        for i = 1:sessions
+            data = data_struct{ses_ind(i)};
+            last = first + size(data,2) - 1;
+            cat_data(first:last) = data;
+            first = last + 1;
+        end
+
         % now randomly pick a set of contigous chunks that add up to the
         % amount of data needed for the true half
         count = datasample(1:num_sets,1);
         true_half_inds = [];
         num_true_half_sets = 1;
+        
         while length(true_half_inds) < pts2sample
+            
             if count > num_sets % if we reach the end of contigous chunks, circle back to the beginning
                 count = 1;            
             end
-        true_half_inds = [true_half_inds; indices_for_data(count,:)']; % all the indices for the data points that will be in the true half of this iteration
-        count = count + 1;
-        num_true_half_sets = num_true_half_sets + 1; % count the number of sets so we can delete them later
+        
+            true_half_inds = [true_half_inds; indices_for_data(count,:)']; % all the indices for the data points that will be in the true half of this iteration
+            count = count + 1;
+            num_true_half_sets = num_true_half_sets + 1; % count the number of sets so we can delete them later
         end
         
         %make corrmats for true half
-        truehalf = catData(:,true_half_inds);
+        truehalf = cat_data(:,true_half_inds);
         corrmat_truehalf = paircorr_mod(truehalf');
         maskmat = ones(333);
         maskmat = logical(triu(maskmat, 1));
         truehalf_corrlin(1,:) = corrmat_truehalf(maskmat);
         
         % now let's chunk the rest of the data, after excluding the true half
-        rest_of_data = catData;
+        rest_of_data = cat_data;
         rest_of_data(:,true_half_inds) = []; % delete the chunks of data that were used for true half because independent samples
         indices_for_rest_of_data = indices_for_data; % let's copy this matrix, so we can use same strategy for sampling increasing amount of data
         indices_for_rest_of_data((end-(num_true_half_sets-1)):end,:) = []; % but let's delete the chunks that equate to the amount of data that was deleted so we don't get an error
@@ -132,8 +155,8 @@ for sub = 1:numel(subject)
     %variable with amount of time sampled in each sample for each subject
     times_all(sub,1:size(times,2)) = times;
     
-    clear catData
-    clear catTmask
+    clear cat_data
+    clear cat_tmask
     clear masked_data
     clear num_sets
     clear indices_for_data
