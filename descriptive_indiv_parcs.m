@@ -16,7 +16,7 @@ end
 
 % datasets
 datasets = {'Lifespan-NU', 'iNet-NU', 'Lifespan-FSU', 'iNet-FSU'};% 
-exclude_subs = {'LS46', 'INET108', 'LS08'};
+exclude_subs = {'INET061', 'INET057','LS46', 'INET108'};
 atlas = 'Parcels333';
 
 
@@ -67,7 +67,6 @@ unique_parcs = unique(group_parcs.data);
 if unique_parcs(1) == 0
     unique_parcs(1) = [];
 end
-
 num_parcs = length(unique_parcs);
 for parc = 1:num_parcs
     atlas_parcs(parc,1) = unique_parcs(parc);
@@ -75,9 +74,11 @@ for parc = 1:num_parcs
     atlas_parcs(parc,2) = length(parc_verts);
     atlas_parcs(parc,3) = sum(surf_areas.data(parc_verts));
 end
-        
+
+avg_parc_size = [];
 avg_parc_size(1) = mean(atlas_parcs(:,2));
 avg_parc_size(2) = mean(atlas_parcs(:,3));
+save(sprintf('%s/GroupAvg_descriptiveIndivParcelInfo.mat', output_dir), 'avg_parc_size', 'num_parcs', 'atlas_parcs', 'atlas')
 
 function [subject, sessions, N] = get_subjects(dataset, exclude_subs)
 
