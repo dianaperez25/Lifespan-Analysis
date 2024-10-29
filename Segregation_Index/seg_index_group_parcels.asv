@@ -25,7 +25,7 @@
 % ------------------------------------------------------------------------
 
 clear all
-group_parc = 0;
+group_parc = ;
 % ------------------------------------------------------------------------
 %% PATHS
 % ------------------------------------------------------------------------
@@ -39,7 +39,7 @@ else
     network_map_dir = [root_dir 'indiv_parcellation/'];
 end
 atlas_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Atlases/';
-out_dir = '/Users/dianaperez/Desktop/FC_metrics_replication/new/';
+out_dir = '/Users/dianaperez/Desktop/FC_metrics_replication/';
 
 if ~exist(out_dir)
     mkdir(out_dir);
@@ -108,9 +108,17 @@ end
 for group = 1:numel(datasets)
     [subjects, sessions, N] = get_subjects(datasets{group}, exclude_subs);
     % initializing variables
-    corrmats = []; group_struct = {}; segregation_by_sub = []; 
-    segregation_by_net = []; betweenFC_by_net = []; withinFC_by_net = [];
-
+    corrmats = []; group_struct = {};
+    
+%     if strcmpi(datasets{group}, 'lifespan')
+%         inds = find(contains(subjects, 'LS'));
+%         subs = subjects(inds);
+%         ses = 5;
+%     elseif strcmpi(datasets{group}, 'inetworks')
+%         inds = find(contains(subjects, 'INET'));
+%         subs = subjects(inds);
+%         ses = 4;
+%     end
     
     for sub = 1:numel(subjects)
     
@@ -137,7 +145,7 @@ for group = 1:numel(datasets)
             if size(timecourse_masked,2)<amt_data
                 continue;
             else
-                matched_data = timecourse_masked(atlas_params.sorti,:);
+                matched_data = timecourse_masked(:,1:amt_data);
                 timecourse_concat = [timecourse_concat matched_data];
             end
         end
@@ -256,7 +264,7 @@ for group = 1:numel(datasets)
             outfile_fig = sprintf('%s/sub-%s_corrmat_indiv_parcels', out_dir, subjects{sub});
         end
 
-        make_indparc_corrmat(sub_corrmat);
+        make_indparc_corrmat(sub_corrmat)
         saveas(gcf,[outfile_fig '.tiff'],'tiff');
         close(gcf);
         %% calculate segregation index across all networks 
@@ -298,7 +306,7 @@ for group = 1:numel(datasets)
          outfile_fig = sprintf('%s/group_%s_corrmat_indiv_parcels', out_dir, datasets{group});
     end
     save(outfile_group, 'group_struct');
-    make_indparc_corrmat(squeeze(mean(corrmats(:,:,:,:),1)));
+    make_indparc_corrmat(squeeze(mean(corrmats(:,:,:,:),1)))
     saveas(gcf,[outfile_fig '.tiff'],'tiff');
     close(gcf);
 end
