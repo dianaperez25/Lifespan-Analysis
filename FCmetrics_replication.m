@@ -3,7 +3,7 @@
 datasets = {'Lifespan-NU', 'iNet-NU', 'Lifespan-FSU', 'iNet-FSU'};
 exclude_subs = {'INET001', 'INET061', 'LS46', 'INET108'};
 
-parcel_data_dir = '/Users/dianaperez/Desktop/FC_metrics_replication/new/';
+parcel_data_dir = '/Volumes/fsmresfiles/PBS/Gratton_Lab/Lifespan/Diana/Diss/FC_metrics_replication/';
 
 for d = 1:numel(datasets)
     group_fname = sprintf('%s/group_%s_segregation_index_group_parcels.mat', parcel_data_dir, datasets{d});
@@ -78,12 +78,12 @@ stats_aov = stats(aov_seg)
 p_vals = [p_vals; stats_aov.pValue];
 
 aov_wFC = anova(factors, wFC, 'ModelSpecification', 'interactions', FactorNames=["Age Group" "Parcellation" "Site"])
-groupmeans(aov_wFC,["Age Group" "Parcellation" ])
+groupmeans(aov_wFC,["Age Group" "Parcellation" "Site"])
 stats_aov = stats(aov_wFC)
 p_vals = [p_vals; stats_aov.pValue];
 
 aov_bFC = anova(factors, bFC, 'ModelSpecification', 'interactions', FactorNames=["Age Group" "Parcellation" "Site"])
-groupmeans(aov_bFC,["Age Group" "Parcellation"])
+groupmeans(aov_bFC,["Age Group" "Parcellation" "Site"])
 stats_aov = stats(aov_bFC)
 p_vals = [p_vals; stats_aov.pValue];
 
